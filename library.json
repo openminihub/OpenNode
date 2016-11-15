@@ -1,0 +1,25 @@
+{
+  "name": "OpenNode",
+  "keywords": "framework, sensor, rf",
+  "description": "Home Automation Framework. Create your own wireless sensor network using RFM69 radios running on Arduino or ESP8266. Over-the-air updates and support in 20+ home automation controllers.",
+  "repository":
+  {
+    "type": "git",
+    "url": "https://github.com/OpenMiniHub/OpenNode.git"
+  },
+  "version": "1.0",
+  "frameworks": "arduino",
+  "platforms": [
+    "atmelavr"
+  ],
+  "exclude": [
+    "Documentation"
+  ],
+  "build": {
+    "srcFilter": [
+      "+<*.c>",
+      "+<*.cpp>",
+      "+<*.h>"
+    ]
+  }
+}
