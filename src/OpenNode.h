@@ -26,6 +26,7 @@
    #define CONFIG_MAX_CONTACTS (255)
 #endif
 
+#include <RFM69.h>
 #include "OpenProtocol.h"
 #include "NodeContact.h"
 #include "NodeConfig.h"
