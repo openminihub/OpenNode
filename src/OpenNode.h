@@ -35,7 +35,18 @@ class RFM69;
 class NodeContact;
 class OpenProtocol;
 
+struct mPayload {
+  unsigned char senderNode=0;
+  unsigned char contactId=0;
+  unsigned char messageType=0;
+  bool isAck=0;
+  unsigned char valueType=0;
+  char value[58]={0};  
+};
+
 void bprintf(const char *fmt, ... );
+void blink(byte PIN, int DELAY_MS);
+void dumpPayload(int src_node, int dst_node, int rssi, bool ack, char* payload, int payload_size, mPayload *msg);
 
 class OpenNode
 {

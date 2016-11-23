@@ -34,6 +34,28 @@ void bprintf(const char *fmt, ... )
   Serial.print(buf);
 }
 
+void blink(byte PIN, int DELAY_MS)
+{
+  pinMode(PIN, OUTPUT);
+  digitalWrite(PIN,HIGH);
+  delay(DELAY_MS);
+  digitalWrite(PIN,LOW);
+}
+
+void dumpPayload(int src_node, int dst_node, int rssi, bool ack, char* payload, int payload_size, mPayload *msg)
+{
+  msg->senderNode = src_node;
+  msg->contactId=payload[kContactId];
+  msg->messageType=payload[1];
+  msg->isAck=ack;
+  msg->valueType=payload[2];
+  for(int i=0; i<payload_size; i++) {
+    msg->value[i]=payload[i+3];
+   }
+   msg->value[payload_size]=0;
+}
+
+
 static OpenNode *gOpenNode = NULL;
 
 OpenNode::OpenNode(RFM69 *radio, unsigned char gateway)
