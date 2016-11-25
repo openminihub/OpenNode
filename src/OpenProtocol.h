@@ -65,7 +65,7 @@ public:
 
   static void buildPingPacket();
   static void buildContactValuePacket(NodeContact *contact);
-  static void buildValuePacket(unsigned char *contactId, ContactData_t *contactData);
+  static void buildValuePacket(unsigned char contactId, ContactData_t contactData);
   static void buildContactListPacket(OpenNode *node);
   static unsigned char buildMessagePacket(char *inputString);
 

@@ -59,7 +59,7 @@ public:
   bool sendHello(const char *name, const char *version);
   bool sendAllContactReport();
   bool sendMessage(char *input);
-  bool sendPayload(unsigned char *contactId, ContactData_t *contactData);
+  bool sendPayload(unsigned char contactId, ContactData_t contactData);
   void setPayload(const char* input);
   void setPayload(float input, unsigned char decimals=2);
   void setPayload(bool input);

@@ -125,7 +125,7 @@ bool OpenNode::sendAllContactReport()
   return true;
 }
 
-bool OpenNode::sendPayload(unsigned char *contactId, ContactData_t *contactData)
+bool OpenNode::sendPayload(unsigned char contactId, ContactData_t contactData)
 {
   OpenProtocol::buildValuePacket(contactId, contactData);
   bool success = this->getRadio()->sendWithRetry(mGateway, (const void*) OpenProtocol::packetData(), OpenProtocol::packetLength());

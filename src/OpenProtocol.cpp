@@ -75,12 +75,12 @@ void OpenProtocol::buildPresentPacket(unsigned char contactId, ContactType_t con
   OpenProtocol::mPacketLength = kPacketPayload;
 }
 
-void OpenProtocol::buildValuePacket(unsigned char *contactId, ContactData_t *contactData)
+void OpenProtocol::buildValuePacket(unsigned char contactId, ContactData_t contactData)
 {
-  OpenProtocol::mPacketBuffer[kContactId] = *contactId;
+  OpenProtocol::mPacketBuffer[kContactId] = contactId;
   OpenProtocol::mPacketBuffer[kPacketType] = C_SET;
-  OpenProtocol::mPacketBuffer[kPacketSubType] = *contactData;
-  OpenProtocol::mPacketLength = kPacketPayload;
+  OpenProtocol::mPacketBuffer[kPacketSubType] = contactData;
+  // OpenProtocol::mPacketLength = kPacketPayload;
 }
 
 void OpenProtocol::buildPingPacket()
