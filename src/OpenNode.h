@@ -63,7 +63,7 @@ public:
   void setPayload(const char* input);
   void setPayload(float input, unsigned char decimals=2);
   void setPayload(bool input);
-  void setPayload(unsigned char* input);
+  void setPayload(unsigned char input);
 
 
   unsigned long run();

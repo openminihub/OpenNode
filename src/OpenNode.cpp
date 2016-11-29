@@ -155,7 +155,6 @@ void OpenNode::setPayload(float input, unsigned char decimals)
 {
   char str_temp[MAX_PAYLOAD_LEN-3];
   dtostrf(input, 1, decimals, str_temp);
-
   OpenProtocol::setPayloadValue(str_temp);
 }
 
@@ -164,9 +163,11 @@ void OpenNode::setPayload(bool input)
   OpenProtocol::setPayloadValue(input ? "1":"0");
 }
 
-void OpenNode::setPayload(unsigned char* input)
+void OpenNode::setPayload(unsigned char input)
 {
-  OpenProtocol::setPayloadValue((const char*)input);
+  char str_temp[4];
+  itoa(input, str_temp, 10);
+  OpenProtocol::setPayloadValue(str_temp);
 }
 
 void OpenNode::presentContact(unsigned char contactId, ContactType_t contactType)
