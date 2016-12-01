@@ -127,7 +127,10 @@ unsigned char OpenProtocol::buildMessagePacket(char *inputString)
       case 3: // Should we request ack from destination?
         OpenProtocol::mAck = atoi(str);
         break;
-      case 4: // Payload
+      case 4: // Should we request ack from destination?
+        OpenProtocol::mPacketBuffer[kPacketSubType] = atoi(str);
+        break;
+      case 5: // Payload
         value = str;
         sendStringSize = strlen(value);
         for(unsigned char j=0; j<sendStringSize; j++)
