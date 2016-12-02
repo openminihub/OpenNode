@@ -45,14 +45,14 @@ void blink(byte PIN, int DELAY_MS)
 void dumpPayload(int src_node, int dst_node, int rssi, bool ack, char* payload, int payload_size, mPayload *msg)
 {
   msg->senderNode = src_node;
-  msg->contactId=payload[kContactId];
-  msg->messageType=payload[1];
-  msg->isAck=ack;
-  msg->valueType=payload[2];
+  msg->contactId = payload[kContactId];
+  msg->messageType = payload[kPacketType];
+  msg->isAck = ack;
+  msg->valueType = payload[kPacketSubType];
   for(int i=0; i<payload_size; i++) {
-    msg->value[i]=payload[i+3];
+    msg->value[i] = payload[kPacketPayload+i];
    }
-   msg->value[payload_size]=0;
+   msg->value[payload_size] = 0;
 }
 
 

@@ -41,7 +41,7 @@ struct mPayload {
   unsigned char messageType=0;
   bool isAck=0;
   unsigned char valueType=0;
-  char value[58]={0};  
+  char value[59]={0};  //max_payload (61-3) +1 (string terminator)
 };
 
 void bprintf(const char *fmt, ... );
