@@ -55,7 +55,7 @@ bool dumpPayload(int src_node, int dst_node, int rssi, bool ack, char* payload, 
     }
     msg->value[payload_size] = 0;
     return true;
-  } esle {
+  } else {
     memset(&msg,0,sizeof(msg));
   }
   return false;
