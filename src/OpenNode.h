@@ -46,7 +46,7 @@ struct mPayload {
 
 void bprintf(const char *fmt, ... );
 void blink(byte PIN, int DELAY_MS);
-void dumpPayload(int src_node, int dst_node, int rssi, bool ack, char* payload, int payload_size, mPayload *msg);
+bool dumpPayload(int src_node, int dst_node, int rssi, bool ack, char* payload, int payload_size, mPayload *msg);
 
 class OpenNode
 {

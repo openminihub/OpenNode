@@ -42,17 +42,23 @@ void blink(byte PIN, int DELAY_MS)
   digitalWrite(PIN,LOW);
 }
 
-void dumpPayload(int src_node, int dst_node, int rssi, bool ack, char* payload, int payload_size, mPayload *msg)
+bool dumpPayload(int src_node, int dst_node, int rssi, bool ack, char* payload, int payload_size, mPayload *msg)
 {
-  msg->senderNode = src_node;
-  msg->contactId = payload[kContactId];
-  msg->messageType = payload[kPacketType];
-  msg->isAck = ack;
-  msg->valueType = payload[kPacketSubType];
-  for(int i=0; i<payload_size; i++) {
-    msg->value[i] = payload[kPacketPayload+i];
-   }
-   msg->value[payload_size] = 0;
+  if (payload_size > 2 && payload[kPacketType] < 5) {
+    msg->senderNode = src_node;
+    msg->contactId = payload[kContactId];
+    msg->messageType = payload[kPacketType];
+    msg->isAck = ack;
+    msg->valueType = payload[kPacketSubType];
+    for(int i=0; i<payload_size; i++) {
+      msg->value[i] = payload[kPacketPayload+i];
+    }
+    msg->value[payload_size] = 0;
+    return true;
+  } esle {
+    memset(&msg,0,sizeof(msg));
+  }
+  return false;
 }
 
 
