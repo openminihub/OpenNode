@@ -45,6 +45,8 @@ public:
 
   bool isEnqueued() { return mIsEnqueued; }; // Enqueueing. Set from interrupt mode will cause report to be sent in the next run loop
 
+  bool isSignedMsg() { return mSignedMsg; };
+
   unsigned long nextTickInterval() { return mNextReport; };
   void intervalTick(unsigned long time);
   void intervalReset() { mNextReport = mReportingInterval; };
@@ -53,6 +55,7 @@ public:
   void setId(unsigned char id) { mId = id; }
   ContactData_t data() { return mData; };
   void setType(ContactData_t data) { mData = data; }
+  void setSigned(bool status) { mSignedMsg = status; }
   
 private:
   unsigned char mId;
@@ -61,6 +64,7 @@ private:
   unsigned long mNextReport;
   NodeValue mValueFunc;
   bool mIsEnqueued;
+  bool mSignedMsg;
 };
 
 #endif // NodeContact_h

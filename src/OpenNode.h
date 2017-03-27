@@ -44,9 +44,22 @@ struct mPayload {
   char value[59]={0};  //max_payload (61-3) +1 (string terminator)
 };
 
+typedef enum {
+  P_FALSE          = 0,
+  P_VALID          = 1,
+  P_NONCE_RESPONSE = 2,
+  P_NONCE_REQUEST  = 3
+} PayloadData_t;
+
 void bprintf(const char *fmt, ... );
 void blink(byte PIN, int DELAY_MS);
-bool dumpPayload(int src_node, int dst_node, int rssi, bool ack, char* payload, int payload_size, mPayload *msg);
+// bool dumpPayload(int src_node, int dst_node, int rssi, bool ack, char* payload, int payload_size, mPayload *msg);
+
+#define doSign(node) (~mSign[node>>3]&(1<<node%8))
+#define setSign(node) (mSign[node>>3]&=~(1<<node%8))
+#define clearSign(node) (mSign[node>>3]|=(1<<node%8))
+// #define clearSign(node) (mSign[node>>3]&=~(1<<node%8))
+// #define setSign(node) (mSign[node>>3]|=(1<<node%8))
 
 class OpenNode
 {
@@ -64,6 +77,9 @@ public:
   void setPayload(float input, unsigned char decimals=2);
   void setPayload(bool input);
   void setPayload(unsigned char input);
+  void signPayload(const char* input);
+
+  PayloadData_t dumpPayload(int src_node, int dst_node, int rssi, bool ack, unsigned char* payload, int payload_size, mPayload *msg);
 
 
   unsigned long run();
@@ -85,6 +101,7 @@ private:
   // bool mIsIncludeMode;
   unsigned int mNumContacts;
   NodeContact *mContacts[CONFIG_MAX_CONTACTS];
+  unsigned char mSign[32] = {255};
 };
 
 #endif // OpenNone_h

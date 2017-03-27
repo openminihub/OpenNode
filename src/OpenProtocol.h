@@ -55,12 +55,15 @@ public:
 
   static unsigned char *packetData();
   static unsigned int packetLength();
+  static unsigned char *nonceData() { return OpenProtocol::mNonceBuffer; };
   static bool packetAck();
   
   static void setPayloadValue(const char* payload);
   static void setPayloadSize(unsigned char size) { mPacketLength = size+kPacketPayload; }
+  static void signPayload(const char* nonce);
 
-  static void buildHelloPacket(ContactInternal_t contactInternal, const char *message);
+  static void buildInternalPacket(ContactInternal_t contactInternal, const char *message);
+  static void buildNoncePacket(unsigned long *message);
   static void buildPresentPacket(unsigned char contactId, ContactType_t contactType);
 
   static void buildPingPacket();
@@ -73,6 +76,7 @@ public:
   static unsigned char *mPacketBuffer;
   static unsigned char mPacketLength;
   static unsigned char mPacketCounter;
+  static unsigned char *mNonceBuffer;
   static bool mAck;
 };
 

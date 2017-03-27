@@ -24,10 +24,12 @@
 #include <Arduino.h>
 
 static unsigned char buf[MAX_PAYLOAD_LEN];
+static unsigned char nbuf[7];
 
 unsigned char* OpenProtocol::mPacketBuffer = (unsigned char*)buf;
 unsigned char OpenProtocol::mPacketLength = 0;
 unsigned char OpenProtocol::mPacketCounter = 0;
+unsigned char* OpenProtocol::mNonceBuffer = (unsigned char*)nbuf;
 bool OpenProtocol::mAck = true;
 
 OpenProtocol::OpenProtocol()
@@ -53,18 +55,40 @@ bool OpenProtocol::packetAck()
 // Packet assembly stuff
 void OpenProtocol::setPayloadValue(const char* payload)
 {
-  unsigned char length = payload == NULL ? 0 : min(strlen(payload), MAX_PAYLOAD_LEN-3);
+  //TO DO: if not signed then do not subsctract 4 from maxsize
+  unsigned char length = payload == NULL ? 0 : min(strlen(payload), MAX_PAYLOAD_LEN-kPacketPayload-4);
   strncpy( (char*)mPacketBuffer+kPacketPayload, payload, length);
   OpenProtocol::setPayloadSize(length);
 }
 
+void OpenProtocol::signPayload(const char* nonce)
+{
+  strncpy( (char*)mPacketBuffer+mPacketLength, nonce, 4);
+  OpenProtocol::setPayloadSize(mPacketLength-kPacketPayload+4); //current total size - start point + nonce size
+}
 
-void OpenProtocol::buildHelloPacket(ContactInternal_t contactInternal, const char *message)
+void OpenProtocol::buildInternalPacket(ContactInternal_t contactInternal, const char *message)
 {
   OpenProtocol::mPacketBuffer[kContactId] = 0xff; //internal contact
   OpenProtocol::mPacketBuffer[kPacketType] = C_INTERNAL;
   OpenProtocol::mPacketBuffer[kPacketSubType] = contactInternal;
-  OpenProtocol::setPayloadValue(message);
+  if (message) {
+    OpenProtocol::setPayloadValue(message);
+  }
+}
+
+void OpenProtocol::buildNoncePacket(unsigned long *nonce)
+{
+  OpenProtocol::mNonceBuffer[kContactId] = 0xff; //internal contact
+  OpenProtocol::mNonceBuffer[kPacketType] = C_INTERNAL;
+  OpenProtocol::mNonceBuffer[kPacketSubType] = I_NONCE_RESPONSE;
+  OpenProtocol::mNonceBuffer[kPacketPayload] = *nonce & 0xff;
+  *nonce >>= 8;
+  OpenProtocol::mNonceBuffer[kPacketPayload+1] = *nonce & 0xff;
+  *nonce >>= 8;
+  OpenProtocol::mNonceBuffer[kPacketPayload+2] = *nonce & 0xff;
+  *nonce >>= 8;
+  OpenProtocol::mNonceBuffer[kPacketPayload+3] = *nonce;
 }
 
 void OpenProtocol::buildPresentPacket(unsigned char contactId, ContactType_t contactType)

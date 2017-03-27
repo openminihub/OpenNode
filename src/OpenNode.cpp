@@ -42,26 +42,6 @@ void blink(byte PIN, int DELAY_MS)
   digitalWrite(PIN,LOW);
 }
 
-bool dumpPayload(int src_node, int dst_node, int rssi, bool ack, char* payload, int payload_size, mPayload *msg)
-{
-  if (payload_size > 2 && payload[kPacketType] < 5) {
-    msg->senderNode = src_node;
-    msg->contactId = payload[kContactId];
-    msg->messageType = payload[kPacketType];
-    msg->isAck = ack;
-    msg->valueType = payload[kPacketSubType];
-    for(int i=0; i<payload_size; i++) {
-      msg->value[i] = payload[kPacketPayload+i];
-    }
-    msg->value[payload_size] = 0;
-    return true;
-  } else {
-    memset(&msg,0,sizeof(msg));
-  }
-  return false;
-}
-
-
 static OpenNode *gOpenNode = NULL;
 
 OpenNode::OpenNode(RFM69 *radio, unsigned char gateway)
@@ -70,6 +50,7 @@ OpenNode::OpenNode(RFM69 *radio, unsigned char gateway)
   mRadio = radio;
   mGateway = gateway;
   mNumContacts = 0;
+  memset(&mSign,255,sizeof(mSign)); //Init binary array with "0"
 }
 
 bool OpenNode::addContact(NodeContact *contact)
@@ -113,11 +94,11 @@ bool OpenNode::sendPing()
 
 bool OpenNode::sendHello(const char *name, const char *version)
 {
-  OpenProtocol::buildHelloPacket(I_SKETCH_NAME, name);
+  OpenProtocol::buildInternalPacket(I_SKETCH_NAME, name);
   bool success = this->getRadio()->sendWithRetry(mGateway, (const void*) OpenProtocol::packetData(), OpenProtocol::packetLength());
   // this->getRadio()->sleep();
 
-  OpenProtocol::buildHelloPacket(I_SKETCH_VERSION, version);
+  OpenProtocol::buildInternalPacket(I_SKETCH_VERSION, version);
   success = this->getRadio()->sendWithRetry(mGateway, (const void*) OpenProtocol::packetData(), OpenProtocol::packetLength());
   this->getRadio()->sleep();
   return success;
@@ -176,12 +157,68 @@ void OpenNode::setPayload(unsigned char input)
   OpenProtocol::setPayloadValue(str_temp);
 }
 
+void OpenNode::signPayload(const char* input)
+{
+  OpenProtocol::signPayload(input);
+}
+
 void OpenNode::presentContact(unsigned char contactId, ContactType_t contactType)
 {
   OpenProtocol::buildPresentPacket(contactId, contactType);
   bool success = this->getRadio()->sendWithRetry(mGateway, (const void*) OpenProtocol::packetData(), OpenProtocol::packetLength());
   this->getRadio()->sleep();
   // return success;
+}
+
+PayloadData_t OpenNode::dumpPayload(int src_node, int dst_node, int rssi, bool ack, unsigned char* payload, int payload_size, mPayload *msg)
+{
+  // Serial.println("<-TRAFFIC NOTICED");
+  if (payload_size > 2 && payload[kPacketType] < 5) {
+    unsigned long validTime;
+    if (payload[kContactId] == 0xff && payload[kPacketType] == C_INTERNAL && payload[kPacketSubType] == I_NONCE_REQUEST) {
+      // Serial.println("<-SIGN [1]: GOT NONCE REQUEST");
+      validTime = millis();
+      // Serial.print("->SIGN [2]: SIGN="); Serial.println(validTime);
+      OpenProtocol::buildNoncePacket(&validTime); //(const char *)nonce);  //(unsigned long *)
+      this->getRadio()->send(src_node, (const void*) OpenProtocol::nonceData(), 7);
+      setSign(src_node);
+      return P_NONCE_REQUEST;
+    }
+    msg->senderNode = src_node;
+    msg->contactId = payload[kContactId];
+    msg->messageType = payload[kPacketType];
+    msg->isAck = ack;
+    msg->valueType = payload[kPacketSubType];
+    for(int i=0; i<payload_size-kPacketPayload; i++) {
+      msg->value[i] = payload[kPacketPayload+i];
+    }
+
+    if (payload[kPacketSubType] == I_NONCE_RESPONSE) {
+      return P_NONCE_RESPONSE;
+    }
+
+    if (doSign(src_node)) {
+      validTime = (unsigned long)payload[payload_size-1] << 24 | (unsigned long)payload[payload_size-2] << 16 | (unsigned long)payload[payload_size-3] << 8 | (unsigned long)payload[payload_size-4];
+      // Serial.print("->MSG: SIGN="); Serial.println(validTime);
+      // Serial.print("->MSG: TIME="); Serial.println(millis() - validTime);
+      if ((millis() - validTime) < (RF69_TX_LIMIT_MS * 3)) { //3x retry sending time
+        // Serial.println("->MSG: SIGN OK");
+        msg->value[payload_size-kPacketPayload-4] = 0;
+      } else {
+        // Serial.println("SIGN FAILED");
+        memset(&msg,0,sizeof(msg));
+        return P_FALSE;
+      }
+      clearSign(src_node);
+    } else {
+      // Serial.println("<-MSG: NOT SIGNED");
+      msg->value[payload_size-kPacketPayload] = 0;
+    }
+    return P_VALID;
+  } else {
+    memset(&msg,0,sizeof(msg));
+  }
+  return P_FALSE;
 }
 
 // bool OpenNode::sendContactReport(unsigned char contactId, ContactData_t contactData, unsigned char destination)
