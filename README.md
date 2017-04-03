@@ -20,8 +20,7 @@ Communication between nodes are serialized using [MySensors.org Serial API v2.0]
 - works with RFM69 library by Felix Rusu without modifications inluding ATC & OTA
 
 ###License
-GPL 3.0, please see the License.txt file
-
+* GPL 3.0, please see the [License](https://github.com/openminihub/OpenNode/blob/master/LICENSE) file
 * Node comunication protocol was taken from [MySensors.org](https://github.com/mysensors/MySensors)
-* OpenNode initially was developed based on Branly IoT source by Johan Kanflo (https://github.com/kanflo/branly-iot) (c) 2015
-* Some ideas/code and inspiration came from LowPowerLab by Felix Rusu (http://LowPowerLab.com/contact)
+* OpenNode initially was developed based on [Branly IoT](https://github.com/kanflo/branly-iot) source by Johan Kanflo
+* Some ideas/code and inspiration came from [LowPowerLab](http://LowPowerLab.com/contact) by Felix Rusu
