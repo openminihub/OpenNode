@@ -40,11 +40,8 @@ public:
   NodeContact(unsigned char contactId, ContactData_t contactData, NodeValue valueFunc = NULL, unsigned long reportingInterval = kReportingIntervalNone);
 
   void refreshValue();
-
   bool sendReport(unsigned char destination=0, bool useDestinationValue=false, bool doRefresh = true);
-
   bool isEnqueued() { return mIsEnqueued; }; // Enqueueing. Set from interrupt mode will cause report to be sent in the next run loop
-
   bool isSignedMsg() { return mSignedMsg; };
 
   unsigned long nextTickInterval() { return mNextReport; };

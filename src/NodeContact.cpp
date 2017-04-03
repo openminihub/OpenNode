@@ -47,41 +47,9 @@ bool NodeContact::sendReport(unsigned char destination, bool useDestinationValue
       destination = node->getGateway();
     if (doRefresh)
       this->refreshValue();
-    if (this->isSignedMsg()) { //Request sing nonce
-      bool waitMsg = true;
-      unsigned char retries=3;
-      for (unsigned char attempt = 0; attempt < retries; attempt++) {
-        // Serial.print("->SIGNED MSG [1]: SENDIG NONCE REQUEST ["); Serial.print(attempt+1); Serial.println("]");
-        OpenProtocol::buildInternalPacket(I_NONCE_REQUEST, NULL);
-        node->getRadio()->send(destination, (const void*) OpenProtocol::packetData(), OpenProtocol::packetLength());
-        unsigned long now = millis();
-        while (waitMsg && millis() - now < RF69_TX_LIMIT_MS) {
-          if (node->getRadio()->receiveDone()) {
-            mPayload msg;
-            PayloadData_t received = node->dumpPayload(node->getRadio()->SENDERID, node->getRadio()->TARGETID, node->getRadio()->RSSI, node->getRadio()->ACK_REQUESTED, (unsigned char *)&node->getRadio()->DATA, node->getRadio()->DATALEN, &msg);
-            if (received == P_NONCE_RESPONSE) {
-              // Serial.println("<-SIGNED MSG [2]: MSG = NONCE RESPONSE");
-              OpenProtocol::buildContactValuePacket(this);
-              OpenProtocol::signPayload(msg.value);
-              waitMsg = false;
-              attempt = retries;
-              // Serial.println("->SIGNED MSG [3]: MSG SENT");
-            } else {
-              // Serial.println("<-SIGNED MSG [2]: MSG = NOT NONCE");
-              return false;
-            }
-          }
-        }
-      }
-      if (waitMsg)
-        return false;
-    } else {
-      OpenProtocol::buildContactValuePacket(this);
-      // Serial.println("->MSG: MSG SENT");
-    }
-    bool success = node->getRadio()->sendWithRetry(destination, (const void*) OpenProtocol::packetData(), OpenProtocol::packetLength());
-    node->getRadio()->sleep();
-    return success;
+
+    OpenProtocol::buildContactValuePacket(this);
+    return node->send(destination, this->isSignedMsg());
   } else {
     return false;
   }

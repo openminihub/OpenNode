@@ -53,13 +53,10 @@ typedef enum {
 
 void bprintf(const char *fmt, ... );
 void blink(byte PIN, int DELAY_MS);
-// bool dumpPayload(int src_node, int dst_node, int rssi, bool ack, char* payload, int payload_size, mPayload *msg);
 
 #define doSign(node) (~mSign[node>>3]&(1<<node%8))
 #define setSign(node) (mSign[node>>3]&=~(1<<node%8))
 #define clearSign(node) (mSign[node>>3]|=(1<<node%8))
-// #define clearSign(node) (mSign[node>>3]&=~(1<<node%8))
-// #define setSign(node) (mSign[node>>3]|=(1<<node%8))
 
 class OpenNode
 {
@@ -68,11 +65,12 @@ public:
 
   static OpenNode *node();
   
+  bool send(unsigned char destination, bool signedMsg);
   bool sendPing();
   bool sendHello(const char *name, const char *version);
   bool sendAllContactReport();
-  bool sendMessage(char *input);
-  bool sendPayload(unsigned char contactId, ContactData_t contactData);
+  bool sendMessage(char *input, bool signedMsg = true);
+  bool sendPayload(unsigned char contactId, ContactData_t contactData, bool signedMsg = true);
   void setPayload(const char* input);
   void setPayload(float input, unsigned char decimals=2);
   void setPayload(bool input);

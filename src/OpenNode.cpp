@@ -50,7 +50,7 @@ OpenNode::OpenNode(RFM69 *radio, unsigned char gateway)
   mRadio = radio;
   mGateway = gateway;
   mNumContacts = 0;
-  memset(&mSign,255,sizeof(mSign)); //Init binary array with "0"
+  memset(&mSign,255,sizeof(mSign)); //Initialize binary array with "0"
 }
 
 bool OpenNode::addContact(NodeContact *contact)
@@ -84,23 +84,59 @@ unsigned long OpenNode::run()
   return sleepInterval;
 }
 
+bool OpenNode::send(unsigned char destination, bool signedMsg)
+{
+  if (signedMsg) { //Request sing nonce
+    bool waitMsg = true;
+    unsigned char retries=3;
+    for (unsigned char attempt = 0; attempt < retries; attempt++) {
+      // Serial.print("->SIGNED MSG [1]: SENDIG NONCE REQUEST ["); Serial.print(attempt+1); Serial.println("]");
+      OpenProtocol::buildNonceRequestPacket();
+      this->getRadio()->send(destination, (const void*) OpenProtocol::nonceData(), 3);
+      unsigned long now = millis();
+      while (waitMsg && millis() - now < RF69_TX_LIMIT_MS) {
+        if (this->getRadio()->receiveDone()) {
+          mPayload msg;
+          PayloadData_t received = this->dumpPayload(this->getRadio()->SENDERID, this->getRadio()->TARGETID, this->getRadio()->RSSI, this->getRadio()->ACK_REQUESTED, (unsigned char *)&this->getRadio()->DATA, this->getRadio()->DATALEN, &msg);
+          if (received == P_NONCE_RESPONSE) {
+            // Serial.println("<-SIGNED MSG [2]: MSG = NONCE RESPONSE");
+            OpenProtocol::signPayload(msg.value);
+            waitMsg = false;
+            attempt = retries;
+            // Serial.println("->SIGNED MSG [3]: MSG SENT");
+          } else {
+            // Serial.println("<-SIGNED MSG [2]: MSG = NOT NONCE");
+            this->getRadio()->sleep();
+            return false;
+          }
+        }
+      }
+    }
+    if (waitMsg) {
+      this->getRadio()->sleep();
+      return false;
+    }
+  }
+  bool success = this->getRadio()->sendWithRetry(destination, (const void*) OpenProtocol::packetData(), OpenProtocol::packetLength());
+  this->getRadio()->sleep();
+  return success;
+}
+
+
 bool OpenNode::sendPing()
 {
   OpenProtocol::buildPingPacket();
-  bool success = this->getRadio()->sendWithRetry(mGateway, (const void*) OpenProtocol::packetData(), OpenProtocol::packetLength());
-  this->getRadio()->sleep();
-  return success;
+  return this->send(mGateway, false);
 }
 
 bool OpenNode::sendHello(const char *name, const char *version)
 {
   OpenProtocol::buildInternalPacket(I_SKETCH_NAME, name);
-  bool success = this->getRadio()->sendWithRetry(mGateway, (const void*) OpenProtocol::packetData(), OpenProtocol::packetLength());
-  // this->getRadio()->sleep();
+  bool success = this->send(mGateway, false);
 
   OpenProtocol::buildInternalPacket(I_SKETCH_VERSION, version);
-  success = this->getRadio()->sendWithRetry(mGateway, (const void*) OpenProtocol::packetData(), OpenProtocol::packetLength());
-  this->getRadio()->sleep();
+  success = success & this->send(mGateway, false);
+
   return success;
 }
 
@@ -112,25 +148,16 @@ bool OpenNode::sendAllContactReport()
   return true;
 }
 
-bool OpenNode::sendPayload(unsigned char contactId, ContactData_t contactData)
+bool OpenNode::sendPayload(unsigned char contactId, ContactData_t contactData, bool signedMsg)
 {
   OpenProtocol::buildValuePacket(contactId, contactData);
-  bool success = this->getRadio()->sendWithRetry(mGateway, (const void*) OpenProtocol::packetData(), OpenProtocol::packetLength());
-  this->getRadio()->sleep();
-  return success;
+  return this->send(mGateway, signedMsg);
 }
 
-bool OpenNode::sendMessage(char *inputString)
+bool OpenNode::sendMessage(char *inputString, bool signedMsg)
 {
   unsigned char targetId = OpenProtocol::buildMessagePacket(inputString);
-  bool success = true;
-  if (OpenProtocol::packetAck())
-    success = this->getRadio()->sendWithRetry(targetId, (const void*)OpenProtocol::packetData(), OpenProtocol::packetLength());
-  else
-    this->getRadio()->send(targetId, (const void*)OpenProtocol::packetData(), OpenProtocol::packetLength());
-
-  this->getRadio()->sleep();
-  return success;
+  return this->send(targetId, signedMsg);
 }
 
 void OpenNode::setPayload(const char* input)
@@ -165,9 +192,7 @@ void OpenNode::signPayload(const char* input)
 void OpenNode::presentContact(unsigned char contactId, ContactType_t contactType)
 {
   OpenProtocol::buildPresentPacket(contactId, contactType);
-  bool success = this->getRadio()->sendWithRetry(mGateway, (const void*) OpenProtocol::packetData(), OpenProtocol::packetLength());
-  this->getRadio()->sleep();
-  // return success;
+  bool success = this->send(mGateway, false);
 }
 
 PayloadData_t OpenNode::dumpPayload(int src_node, int dst_node, int rssi, bool ack, unsigned char* payload, int payload_size, mPayload *msg)

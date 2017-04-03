@@ -77,6 +77,13 @@ void OpenProtocol::buildInternalPacket(ContactInternal_t contactInternal, const 
   }
 }
 
+void OpenProtocol::buildNonceRequestPacket()
+{
+  OpenProtocol::mNonceBuffer[kContactId] = 0xff; //internal contact
+  OpenProtocol::mNonceBuffer[kPacketType] = C_INTERNAL;
+  OpenProtocol::mNonceBuffer[kPacketSubType] = I_NONCE_REQUEST;
+}
+
 void OpenProtocol::buildNoncePacket(unsigned long *nonce)
 {
   OpenProtocol::mNonceBuffer[kContactId] = 0xff; //internal contact

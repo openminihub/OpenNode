@@ -63,6 +63,7 @@ public:
   static void signPayload(const char* nonce);
 
   static void buildInternalPacket(ContactInternal_t contactInternal, const char *message);
+  static void buildNonceRequestPacket();
   static void buildNoncePacket(unsigned long *message);
   static void buildPresentPacket(unsigned char contactId, ContactType_t contactType);
 
