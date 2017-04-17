@@ -1,7 +1,7 @@
 // **********************************************************************************
 // OpenNode library for OpenMiniHub IoT, Node and Contact types from mysensors.org
 // **********************************************************************************
-// Copyright Martins Ierags (2016), martins.ierags@gmail.com
+// Copyright Martins Ierags (2017), martins.ierags@gmail.com
 // http://openminihub.com/
 // **********************************************************************************
 #ifndef OpenType_h

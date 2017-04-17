@@ -1,7 +1,7 @@
 // **********************************************************************************
 // OpenNode library for OpenMiniHub IoT
 // **********************************************************************************
-// Copyright Martins Ierags (2016), martins.ierags@gmail.com
+// Copyright Martins Ierags (2017), martins.ierags@gmail.com
 // http://openminihub.com/
 // **********************************************************************************
 // License
@@ -127,6 +127,21 @@ void OpenProtocol::buildContactValuePacket(NodeContact *contact)
   OpenProtocol::mPacketBuffer[kContactId] = contact->id();
   OpenProtocol::mPacketBuffer[kPacketType] = C_SET;
   OpenProtocol::mPacketBuffer[kPacketSubType] = contact->data();
+}
+
+void OpenProtocol::buildIdPacket(OpenNode *node)
+{
+  OpenProtocol::mPacketBuffer[kContactId] = 0xff; //internal contact
+  OpenProtocol::mPacketBuffer[kPacketType] = C_INTERNAL;
+  OpenProtocol::mPacketBuffer[kPacketSubType] = I_ID_RESPONSE;
+  OpenProtocol::mPacketBuffer[kPacketPayload] = node->getNetworkID();
+  OpenProtocol::mPacketBuffer[kPacketPayload+1] = node->getFrequency();
+  OpenProtocol::mPacketBuffer[kPacketPayload+2] = node->newNodeID();
+  char *encryptKey = node->getEncryptKey();
+  for(unsigned char j=0; j<16; j++) {
+    OpenProtocol::mPacketBuffer[kPacketPayload+3+j] = encryptKey[j];
+  }
+  OpenProtocol::mPacketLength = kPacketPayload+19;
 }
 
 unsigned char OpenProtocol::buildMessagePacket(char *inputString)

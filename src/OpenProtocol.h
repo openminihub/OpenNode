@@ -1,7 +1,7 @@
 // **********************************************************************************
 // OpenNode library for OpenMiniHub IoT
 // **********************************************************************************
-// Copyright Martins Ierags (2016), martins.ierags@gmail.com
+// Copyright Martins Ierags (2017), martins.ierags@gmail.com
 // http://openminihub.com/
 // **********************************************************************************
 // License
@@ -71,6 +71,7 @@ public:
   static void buildContactValuePacket(NodeContact *contact);
   static void buildValuePacket(unsigned char contactId, ContactData_t contactData);
   static void buildContactListPacket(OpenNode *node);
+  static void buildIdPacket(OpenNode *node);
   static unsigned char buildMessagePacket(char *inputString);
 
 //private:

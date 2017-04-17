@@ -1,7 +1,7 @@
 // **********************************************************************************
 // OpenNode library for OpenMiniHub IoT
 // **********************************************************************************
-// Copyright Martins Ierags (2016), martins.ierags@gmail.com
+// Copyright Martins Ierags (2017), martins.ierags@gmail.com
 // http://openminihub.com/
 // **********************************************************************************
 // License
@@ -59,6 +59,7 @@ void NodeContact::refreshValue()
 {
   if (mValueFunc) {
     bool success = mValueFunc(mId); //can add id and datatype
+    //TO DO: handle return value
   }
 }
 
