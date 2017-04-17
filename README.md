@@ -1,7 +1,5 @@
 # OpenNode
-========
-By Martins Ierags (c) 2016 [OpenMiniHub](http//www.openminihub.com)
-<br/>
+**By Martins Ierags (c) 2017 [OpenMiniHub](http//www.openminihub.com)**
 
 ## Description
 The OpenNode is light and simple library for Arduino that handles wireless communication protocol between controller and nodes with attached sensors/actuators.<br/>
