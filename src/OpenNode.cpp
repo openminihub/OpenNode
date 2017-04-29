@@ -52,18 +52,25 @@ void resetNode()
 
 static OpenNode *gOpenNode = NULL;
 
-OpenNode::OpenNode(RFM69 *radio, unsigned char gateway)
+OpenNode::OpenNode(RFM69 *radio, unsigned char button, unsigned char gateway)
 {
   gOpenNode = this;
   mRadio = radio;
   mGateway = gateway;
   mNumContacts = 0;
   mIsIncludeMode = false;
+  mWaitForUpdate = false;
+  mButton = button;
   memset(&mSign,255,sizeof(mSign)); //Initialize binary array with "1"
   // memset(&mNodeIdTable,255,sizeof(mNodeIdTable)); //Initialize binary array with "1"
   // writeNodeIdTable();
+// #ifdef IS_GATEWAY
   readNodeIdTable();
-  pinMode(buttonPin, INPUT);
+// #endif
+  memset(&mHasUpdate,255,sizeof(mHasUpdate)); //Initialize binary array with "1"
+  // setxUpdate(5);
+  // pinMode(buttonPin, INPUT);
+  pinMode(mButton, INPUT);
 }
 
 bool OpenNode::addContact(NodeContact *contact)
@@ -135,6 +142,7 @@ void OpenNode::initRadio(unsigned char nodeID, bool readFromEEPROM, bool updateC
       saveRadioConfig();
     }
   }
+  this->getRadio()->sleep();
 }
 
 void OpenNode::updateKey(const char* key)
@@ -142,6 +150,24 @@ void OpenNode::updateKey(const char* key)
   for (uint8_t i = 0; i < 16; i++) {
     mEncryptKey[i]=key[i];
   }
+}
+
+bool OpenNode::hasUpdate(unsigned char node)
+{
+  if (~mHasUpdate[node>>3]&(1<<node%8)) 
+    return true;
+  else
+    return false;
+}
+
+void OpenNode::enableUpdate(unsigned char node)
+{
+  mHasUpdate[node>>3]&=~(1<<node%8);
+}
+
+void OpenNode::disableUpdate(unsigned char node)
+{
+  mHasUpdate[node>>3]|=(1<<node%8);
 }
 
 void OpenNode::saveRadioConfig()
@@ -157,13 +183,13 @@ void OpenNode::saveRadioConfig()
 
 bool OpenNode::checkButton()
 {
-  unsigned char reading = digitalRead(buttonPin);
-  if (reading == LOW) {
+  unsigned char reading = digitalRead(mButton);
+  if (mButton && reading == LOW) {
     unsigned long pressedTime = millis();
-    // Serial.println("* button *");
+    Serial.println("* button *");
     digitalWrite(LED, HIGH);
-    while ((millis() - pressedTime) < debounceDelay)
-      delay(debounceDelay);
+    while ((millis() - pressedTime) < debounceDelay);
+      // delay(debounceDelay);
     digitalWrite(LED, LOW);
     return true;
   }
@@ -182,7 +208,7 @@ bool OpenNode::requestConfig()
     while (waitMsg && millis() - now < RF69_TX_LIMIT_MS) {
       if (this->getRadio()->receiveDone()) {
         mPayload msg;
-        PayloadData_t received = this->dumpPayload(this->getRadio()->SENDERID, this->getRadio()->TARGETID, this->getRadio()->RSSI, this->getRadio()->ACK_REQUESTED, (unsigned char *)&this->getRadio()->DATA, this->getRadio()->DATALEN, &msg);
+        PayloadData_t received = this->dumpPayload(&msg);
         if (received == P_ID_RESPONSE) {
           if (this->getRadio()->ACKRequested())
             this->getRadio()->sendACK();
@@ -192,6 +218,7 @@ bool OpenNode::requestConfig()
           for (uint8_t i = 0; i < 16; i++) 
             mEncryptKey[i]=msg.value[3+i];
           saveRadioConfig();
+          Serial.println("Saving radio config");
           // initRadio(mNodeID);
           waitMsg = false;
           attempt = retries;
@@ -210,6 +237,7 @@ bool OpenNode::requestConfig()
   }
 }
 
+// #ifdef IS_GATEWAY
 unsigned char OpenNode::newNodeID()
 { 
   for (unsigned char i = 2; i < 256; i++) 
@@ -217,6 +245,7 @@ unsigned char OpenNode::newNodeID()
 
   return 1; 
 }
+// #endif
 
 bool OpenNode::send(unsigned char destination, bool signedMsg)
 {
@@ -231,7 +260,7 @@ bool OpenNode::send(unsigned char destination, bool signedMsg)
       while (waitMsg && millis() - now < RF69_TX_LIMIT_MS) {
         if (this->getRadio()->receiveDone()) {
           mPayload msg;
-          PayloadData_t received = this->dumpPayload(this->getRadio()->SENDERID, this->getRadio()->TARGETID, this->getRadio()->RSSI, this->getRadio()->ACK_REQUESTED, (unsigned char *)&this->getRadio()->DATA, this->getRadio()->DATALEN, &msg);
+          PayloadData_t received = this->dumpPayload(&msg);
           if (received == P_NONCE_RESPONSE) {
             // Serial.println("<-SIGNED MSG [2]: MSG = NONCE RESPONSE");
             OpenProtocol::signPayload(msg.value);
@@ -252,7 +281,19 @@ bool OpenNode::send(unsigned char destination, bool signedMsg)
     }
   }
   bool success = this->getRadio()->sendWithRetry(destination, (const void*) OpenProtocol::packetData(), OpenProtocol::packetLength());
+  //Does ACK has some message?
+  if (success) {
+    // noInterrupts();  // ? prevent loss of data while copying
+    if (this->getRadio()->DATALEN) {
+      if (this->getRadio()->DATA[0] == 'U') {
+        mWaitForUpdate = true;
+        Serial.println("GOT: U");
+      }
+    }
+    // interrupts();
+  }
   this->getRadio()->sleep();
+  blink(100);
   return success;
 }
 
@@ -329,15 +370,28 @@ void OpenNode::presentContact(unsigned char contactId, ContactType_t contactType
   bool success = this->send(mGateway, false);
 }
 
-PayloadData_t OpenNode::dumpPayload(int src_node, int dst_node, int rssi, bool ack, unsigned char* payload, int payload_size, mPayload *msg)
+// PayloadData_t OpenNode::dumpPayload(int src_node, int dst_node, int rssi, bool ack, unsigned char* payload, int payload_size, mPayload *msg)
+PayloadData_t OpenNode::dumpPayload(mPayload *msg)
 {
+  int payload_size = this->getRadio()->DATALEN;
+  unsigned char* payload = (unsigned char* )&this->getRadio()->DATA;
   // if (mIsIncludeMode) {
-      // if (millis() - includeTime < (includeTimeOut*1000))
+      // if (millis() - mIncludeTime < (includeTimeOut*1000))
         // Serial.println("THIS exit");
         // exitIncludeMode();
   // }
   // Serial.println("<-TRAFFIC NOTICED");
   if (payload_size > 2 && payload[kPacketType] < 5) {
+
+    // noInterrupts();  // ? prevent loss of data while copying
+    int src_node = this->getRadio()->SENDERID;
+    // int dst_node = this->getRadio()->TARGETID;
+    // bool ack = this->getRadio()->ACK_REQUESTED;
+
+    msg->isAck = this->getRadio()->ACK_REQUESTED;
+    msg->rssi = this->getRadio()->RSSI;
+    // Serial.println(this->getRadio()->RSSI);
+
     unsigned long validTime;
     if (payload[kContactId] == 0xff && payload[kPacketType] == C_INTERNAL && payload[kPacketSubType] == I_NONCE_REQUEST) {
       // Serial.println("<-SIGN [1]: GOT NONCE REQUEST");
@@ -346,9 +400,11 @@ PayloadData_t OpenNode::dumpPayload(int src_node, int dst_node, int rssi, bool a
       OpenProtocol::buildNoncePacket(&validTime); //(const char *)nonce);  //(unsigned long *)
       this->getRadio()->send(src_node, (const void*) OpenProtocol::nonceData(), 7);
       setSign(src_node);
+// interrupts();
       return P_NONCE_REQUEST;
     }
-    if (payload[kContactId] == 0xff && payload[kPacketType] == C_INTERNAL && payload[kPacketSubType] == I_ID_REQUEST) {
+// #ifdef IS_GATEWAY
+    if (mIsIncludeMode && payload[kContactId] == 0xff && payload[kPacketType] == C_INTERNAL && payload[kPacketSubType] == I_ID_REQUEST) {
       Serial.println("Sending network data");
       OpenProtocol::buildIdPacket(this);
       this->getRadio()->setPowerLevel(0);
@@ -359,23 +415,36 @@ PayloadData_t OpenNode::dumpPayload(int src_node, int dst_node, int rssi, bool a
         writeNodeIdTable();
         exitIncludeMode();
       }
+// interrupts();
       return P_ID_REQUEST;
     }
-
+// #endif
     msg->senderNode = src_node;
     msg->contactId = payload[kContactId];
     msg->messageType = payload[kPacketType];
-    msg->isAck = ack;
+    // msg->isAck = ack;
     msg->valueType = payload[kPacketSubType];
     for(int i=0; i<payload_size-kPacketPayload; i++) {
       msg->value[i] = payload[kPacketPayload+i];
     }
 
     if (payload[kPacketSubType] == I_NONCE_RESPONSE) {
+      // Serial.print("["); Serial.print((unsigned char)payload_size);  Serial.print("]");
+      // Serial.print((unsigned char)msg->senderNode);  Serial.print(";");
+      // Serial.print((unsigned char)msg->contactId);   Serial.print(";");
+      // Serial.print((unsigned char)msg->messageType); Serial.print(";");
+      // Serial.print((unsigned char)msg->isAck);       Serial.print(";");
+      // Serial.print((unsigned char)msg->valueType);   Serial.print(";");
+      // for(int i=0; i<payload_size-kPacketPayload; i++) {
+      //   Serial.print((unsigned char)msg->value[i]); Serial.print(" ");
+      // }
+      // Serial.println();
+// interrupts();
       return P_NONCE_RESPONSE;
     }
 
     if (payload[kPacketSubType] == I_ID_RESPONSE) {
+// interrupts();
       return P_ID_RESPONSE;
     }
 
@@ -389,6 +458,7 @@ PayloadData_t OpenNode::dumpPayload(int src_node, int dst_node, int rssi, bool a
       } else {
         // Serial.println("SIGN FAILED");
         memset(&msg,0,sizeof(msg));
+// interrupts();
         return P_FALSE;
       }
       clearSign(src_node);
@@ -396,10 +466,12 @@ PayloadData_t OpenNode::dumpPayload(int src_node, int dst_node, int rssi, bool a
       // Serial.println("<-MSG: NOT SIGNED");
       msg->value[payload_size-kPacketPayload] = 0;
     }
+// interrupts();
     return P_VALID;
   } else {
     memset(&msg,0,sizeof(msg));
   }
+// interrupts();
   return P_FALSE;
 }
 

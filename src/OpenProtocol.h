@@ -71,7 +71,9 @@ public:
   static void buildContactValuePacket(NodeContact *contact);
   static void buildValuePacket(unsigned char contactId, ContactData_t contactData);
   static void buildContactListPacket(OpenNode *node);
+// #ifdef IS_GATEWAY
   static void buildIdPacket(OpenNode *node);
+// #endif
   static unsigned char buildMessagePacket(char *inputString);
 
 //private:

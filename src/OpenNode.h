@@ -49,6 +49,7 @@ struct mPayload {
   unsigned char messageType=0;
   bool isAck=0;
   unsigned char valueType=0;
+  int rssi = 0;
   char value[59]={0};  //max_payload (61-3) +1 (string terminator)
 };
 
@@ -69,9 +70,11 @@ void resetNode();
 #define setSign(node) (mSign[node>>3]&=~(1<<node%8))
 #define clearSign(node) (mSign[node>>3]|=(1<<node%8))
 
-#define isNode(node) (~mNodeIdTable[node>>3]&(1<<node%8))
-#define setNode(node) (mNodeIdTable[node>>3]&=~(1<<node%8))
-#define clearNode(node) (mNodeIdTable[node>>3]|=(1<<node%8))
+// #ifdef IS_GATEWAY
+  #define isNode(node) (~mNodeIdTable[node>>3]&(1<<node%8))
+  #define setNode(node) (mNodeIdTable[node>>3]&=~(1<<node%8))
+  #define clearNode(node) (mNodeIdTable[node>>3]|=(1<<node%8))
+// #endif
 
 #define readConfig(__pos) eeprom_read_byte((uint8_t*)(__pos))
 #define writeConfig(__pos, __val) eeprom_update_byte((uint8_t*)(__pos), (__val))
@@ -81,18 +84,18 @@ void resetNode();
 class OpenNode
 {
 public:
-  OpenNode(RFM69 *radio, unsigned char gateway = 0);
+  OpenNode(RFM69 *radio, unsigned char button = buttonPin, unsigned char gateway = 0);
   static OpenNode *node();
 
   void initRadio(unsigned char nodeID = 1, bool readFromEEPROM = true, bool updateConfig = true);
   void saveRadioConfig();
-  // void updateKey(const char* key) { for (uint8_t i = 0; i < 16; i++) { mEncryptKey[i]=key[i]; } };
   void updateKey(const char* key);
   bool checkButton();
   bool requestConfig();
   unsigned char newNodeID();
   void writeNodeIdTable() { writeConfigBlock(&mNodeIdTable, EEPROM_NODE_ID_TABLE, 32); };
   void readNodeIdTable() { readConfigBlock(&mNodeIdTable, EEPROM_NODE_ID_TABLE, 32); };
+  unsigned char *getNodeIdTable() { return mNodeIdTable; };
 
   bool send(unsigned char destination, bool signedMsg);
   bool sendPing();
@@ -106,11 +109,12 @@ public:
   void setPayload(unsigned char input);
   void signPayload(const char* input);
 
-  PayloadData_t dumpPayload(int src_node, int dst_node, int rssi, bool ack, unsigned char* payload, int payload_size, mPayload *msg);
+  // PayloadData_t dumpPayload(int src_node, int dst_node, int rssi, bool ack, unsigned char* payload, int payload_size, mPayload *msg);
+  PayloadData_t dumpPayload(mPayload *msg);
 
   unsigned long run();
 
-  void enterIncludeMode() { initRadio(mNodeID, false, false); mIsIncludeMode = true; includeTime = millis(); };
+  void enterIncludeMode() { initRadio(mNodeID, false, false); mIsIncludeMode = true; mIncludeTime = millis(); };
   void exitIncludeMode() { Serial.println("Exit include"); initRadio(mNodeID); mIsIncludeMode = false;};
   // bool isIncludeMode() { return mIsIncludeMode; };
 
@@ -125,12 +129,18 @@ public:
   unsigned char getFrequency() { return mFrequency; };
   char *getEncryptKey() { return mEncryptKey; };
   // bool sendContactReport(unsigned char contactId, ContactData_t contactData, unsigned char destination = mGateway);
+  bool hasUpdate(unsigned char node);
+  void enableUpdate(unsigned char node);
+  void disableUpdate(unsigned char node);
+  bool waitForUpdate() { return mWaitForUpdate; };
+  void disableWaitForUpdate() { mWaitForUpdate = false; };
 
 private:
   RFM69 *mRadio;
   unsigned char mGateway;
   bool mIsIncludeMode;
-  unsigned long includeTime;
+  bool mWaitForUpdate;
+  unsigned long mIncludeTime;
   unsigned int mNumContacts;
   NodeContact *mContacts[CONFIG_MAX_CONTACTS];
   unsigned char mSign[32]; // = {255};
@@ -139,8 +149,9 @@ private:
   unsigned char mFrequency;
   unsigned char mNetworkID;
   unsigned char mNodeIdTable[32];
-
+  unsigned char mHasUpdate[32];
   unsigned int debounceDelay = 1000;    // the debounce time for button
+  unsigned char mButton = 14;
 };
 
 #endif // OpenNode_h

@@ -96,6 +96,11 @@ void OpenProtocol::buildNoncePacket(unsigned long *nonce)
   OpenProtocol::mNonceBuffer[kPacketPayload+2] = *nonce & 0xff;
   *nonce >>= 8;
   OpenProtocol::mNonceBuffer[kPacketPayload+3] = *nonce;
+  // Serial.print("NONCE: ");
+  // Serial.print((unsigned char)OpenProtocol::mNonceBuffer[kPacketPayload]); Serial.print(" ");
+  // Serial.print((unsigned char)OpenProtocol::mNonceBuffer[kPacketPayload+1]); Serial.print(" ");
+  // Serial.print((unsigned char)OpenProtocol::mNonceBuffer[kPacketPayload+2]); Serial.print(" ");
+  // Serial.println((unsigned char)OpenProtocol::mNonceBuffer[kPacketPayload+3]);
 }
 
 void OpenProtocol::buildPresentPacket(unsigned char contactId, ContactType_t contactType)
@@ -129,6 +134,7 @@ void OpenProtocol::buildContactValuePacket(NodeContact *contact)
   OpenProtocol::mPacketBuffer[kPacketSubType] = contact->data();
 }
 
+// #ifdef IS_GATEWAY
 void OpenProtocol::buildIdPacket(OpenNode *node)
 {
   OpenProtocol::mPacketBuffer[kContactId] = 0xff; //internal contact
@@ -143,6 +149,7 @@ void OpenProtocol::buildIdPacket(OpenNode *node)
   }
   OpenProtocol::mPacketLength = kPacketPayload+19;
 }
+// #endif
 
 unsigned char OpenProtocol::buildMessagePacket(char *inputString)
 {
