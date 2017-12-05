@@ -147,7 +147,8 @@ typedef enum {
   I_PONG          = 25, //!< In return to ping, sent back to sender, payload incremental hop counter
   I_REGISTRATION_REQUEST = 26, //!< Register request to GW
   I_REGISTRATION_RESPONSE = 27, //!< Register response from GW
-  I_DEBUG         = 28  //!< Debug message
+  I_DEBUG         = 28,  //!< Debug message
+  I_HAS_NEW_MESSAGES  = 29   //!< Does the node has new messages
 } ContactInternal_t;
 
 

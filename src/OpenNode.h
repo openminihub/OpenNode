@@ -100,6 +100,7 @@ public:
   bool send(unsigned char destination, bool signedMsg);
   bool sendPing();
   bool sendHello(const char *name, const char *version);
+  bool sendInternalMessage(ContactInternal_t contactInternal, const char *message = "");
   bool sendAllContactReport();
   bool sendMessage(char *input, bool signedMsg = true);
   bool sendPayload(unsigned char contactId, ContactData_t contactData, bool signedMsg = true);
@@ -111,6 +112,8 @@ public:
 
   // PayloadData_t dumpPayload(int src_node, int dst_node, int rssi, bool ack, unsigned char* payload, int payload_size, mPayload *msg);
   PayloadData_t dumpPayload(mPayload *msg);
+  PayloadData_t waitForMessage(mPayload *msg);
+
 
   unsigned long run();
 

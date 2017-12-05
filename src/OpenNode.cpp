@@ -297,7 +297,6 @@ bool OpenNode::send(unsigned char destination, bool signedMsg)
   return success;
 }
 
-
 bool OpenNode::sendPing()
 {
   OpenProtocol::buildPingPacket();
@@ -313,6 +312,12 @@ bool OpenNode::sendHello(const char *name, const char *version)
   success = success & this->send(mGateway, false);
 
   return success;
+}
+
+bool OpenNode::sendInternalMessage(ContactInternal_t contactInternal, const char *message)
+{
+  OpenProtocol::buildInternalPacket(contactInternal, message);
+  return this->send(mGateway, false);
 }
 
 bool OpenNode::sendAllContactReport()
@@ -473,6 +478,26 @@ PayloadData_t OpenNode::dumpPayload(mPayload *msg)
   }
 // interrupts();
   return P_FALSE;
+}
+
+PayloadData_t OpenNode::waitForMessage(mPayload *msg)
+{
+  bool waitMsg = true;
+  PayloadData_t pld;
+  unsigned long now = millis();
+  while (waitMsg && millis() - now < RF69_TX_LIMIT_MS) {
+    if (this->getRadio()->receiveDone()) {
+      pld = this->dumpPayload(msg);
+      if (this->getRadio()->ACK_REQUESTED) {
+        this->getRadio()->sendACK();
+      }
+      waitMsg = false;
+    }
+  }
+  if (waitMsg)
+    return P_FALSE;
+  else
+    return pld;
 }
 
 // bool OpenNode::sendContactReport(unsigned char contactId, ContactData_t contactData, unsigned char destination)
