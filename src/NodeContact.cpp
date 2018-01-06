@@ -45,22 +45,35 @@ bool NodeContact::sendReport(unsigned char destination, bool useDestinationValue
   if (node) {
     if (!useDestinationValue)
       destination = node->getGateway();
-    if (doRefresh)
-      this->refreshValue();
-
-    OpenProtocol::buildContactValuePacket(this);
-    return node->send(destination, this->isSignedMsg());
+    if (doRefresh) {
+      if (this->refreshValue()) {
+        OpenProtocol::buildContactValuePacket(this);
+        return node->send(destination, this->isSignedMsg());
+      }
+      else {
+        // Serial.println("I'm broking node 1");
+        // OpenProtocol::buildContactValuePacket(this);
+        // return node->send(destination, this->isSignedMsg());
+        node->getRadio()->sleep();
+        return false;
+      }
+    }
+    else {
+      OpenProtocol::buildContactValuePacket(this);
+      return node->send(destination, this->isSignedMsg());
+    }
   } else {
     return false;
   }
 }
 
-void NodeContact::refreshValue()
+bool NodeContact::refreshValue()
 {
+  bool success = false;
   if (mValueFunc) {
-    bool success = mValueFunc(mId); //can add id and datatype
-    //TO DO: handle return value
+    success = mValueFunc(mId); //can add id and datatype
   }
+  return success;
 }
 
 void NodeContact::intervalTick(unsigned long time)

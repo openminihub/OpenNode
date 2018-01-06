@@ -87,15 +87,15 @@ OpenNode *OpenNode::node()
 
 unsigned long OpenNode::run()
 {
-  if (mNodeID) {  // If not a gateway...
-    if (checkButton()) {
-      if (requestConfig()) {
-        //if got network config then reset node
-        blink(1000);
-        resetNode();
-      }
-    }
-  }
+  // if (mNodeID) {  // If not a gateway...
+    // if (checkButton()) {
+    //   if (requestConfig()) {
+    //     //if got network config then reset node
+    //     blink(1000);
+    //     resetNode();
+    //   }
+    // }
+  // }
   unsigned long sleepInterval = 0xffffffff;
   for (unsigned char i=0; i<mNumContacts; i++) {
     if (mContacts[i]->isEnqueued()) {
@@ -184,7 +184,7 @@ void OpenNode::saveRadioConfig()
 bool OpenNode::checkButton()
 {
   unsigned char reading = digitalRead(mButton);
-  if (mButton && reading == LOW) {
+  if (mButton && reading == HIGH) { //LOW
     unsigned long pressedTime = millis();
     Serial.println("* button *");
     digitalWrite(LED, HIGH);
@@ -322,8 +322,9 @@ bool OpenNode::sendInternalMessage(ContactInternal_t contactInternal, const char
 
 bool OpenNode::sendAllContactReport()
 {
+  this->setPayload("\0"); //no need to send data. We are sending only message type
   for(unsigned char j=0; j<mNumContacts; j++) {
-    mContacts[j]->sendReport();
+    mContacts[j]->sendReport(0, false, false);
   }
   return true;
 }
@@ -483,9 +484,25 @@ PayloadData_t OpenNode::dumpPayload(mPayload *msg)
 PayloadData_t OpenNode::waitForMessage(mPayload *msg)
 {
   bool waitMsg = true;
-  PayloadData_t pld;
+  PayloadData_t pld = P_FALSE;
   unsigned long now = millis();
-  while (waitMsg && millis() - now < RF69_TX_LIMIT_MS) {
+  while (waitMsg && ((millis() - now) < (RF69_TX_LIMIT_MS*4))) {
+    if (this->getRadio()->receiveDone()) {
+      pld = this->dumpPayload(msg);
+      if (this->getRadio()->ACK_REQUESTED) {
+        this->getRadio()->sendACK();
+      }
+      if (pld == P_VALID)
+        waitMsg = false;
+    }
+  }
+  return pld;
+
+  /*
+  bool waitMsg = true;
+  PayloadData_t pld = P_FALSE;
+  unsigned long now = millis();
+  while (waitMsg && ((millis() - now) < (RF69_TX_LIMIT_MS*3))) {
     if (this->getRadio()->receiveDone()) {
       pld = this->dumpPayload(msg);
       if (this->getRadio()->ACK_REQUESTED) {
@@ -494,10 +511,28 @@ PayloadData_t OpenNode::waitForMessage(mPayload *msg)
       waitMsg = false;
     }
   }
-  if (waitMsg)
-    return P_FALSE;
-  else
-    return pld;
+      // Serial.print("got pld=");
+      // Serial.println(pld);
+  if (pld == P_NONCE_REQUEST) {
+    waitMsg = true;
+    now = millis();
+    // while (waitMsg && millis() - now < RF69_TX_LIMIT_MS*3) {
+    while (waitMsg && ((millis() - now) < (RF69_TX_LIMIT_MS*3))) {
+      if (this->getRadio()->receiveDone()) {
+        pld = this->dumpPayload(msg);
+        if (this->getRadio()->ACK_REQUESTED) {
+          this->getRadio()->sendACK();
+        }
+        waitMsg = false;
+      }
+    }
+  }
+      // Serial.print("got pld=");
+      // Serial.println(pld);
+      // Serial.print("got msg=");
+      // Serial.println(String(msg->value));
+  return pld;
+  */
 }
 
 // bool OpenNode::sendContactReport(unsigned char contactId, ContactData_t contactData, unsigned char destination)
