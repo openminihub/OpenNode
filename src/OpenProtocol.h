@@ -20,7 +20,7 @@
 // **********************************************************************************
 #ifndef OpenProtocol_h
 #define OpenProtocol_h
-#include "NodeType.h"
+#include "DeviceType.h"
 
 #ifndef NULL
   #define NULL (0) // Not defined in Arduino
@@ -29,11 +29,11 @@
   #define MAX_PAYLOAD_LEN 61
 #endif
 
-class NodeContact;
+class NodeDevice;
 class OpenNode;
 
 typedef enum {
-  kContactId = 0,
+  kDeviceId = 0,
   kPacketType,    //1
   kPacketSubType, //2
   kPacketPayload  //3
@@ -62,15 +62,15 @@ public:
   static void setPayloadSize(unsigned char size) { mPacketLength = size+kPacketPayload; }
   static void signPayload(const char* nonce);
 
-  static void buildInternalPacket(ContactInternal_t contactInternal, const char *message);
+  static void buildInternalPacket(DeviceInternal_t deviceInternal, const char *message);
   static void buildNonceRequestPacket();
   static void buildNoncePacket(unsigned long *message);
-  static void buildPresentPacket(unsigned char contactId, ContactType_t contactType);
+  static void buildPresentPacket(unsigned char deviceId, DeviceType_t deviceType);
 
   static void buildPingPacket();
-  static void buildContactValuePacket(NodeContact *contact);
-  static void buildValuePacket(unsigned char contactId, ContactData_t contactData);
-  static void buildContactListPacket(OpenNode *node);
+  static void buildDeviceValuePacket(NodeDevice *device);
+  static void buildValuePacket(unsigned char deviceId, DeviceData_t deviceData);
+  static void buildDeviceListPacket(OpenNode *node);
 // #ifdef IS_GATEWAY
   static void buildIdPacket(OpenNode *node);
 // #endif

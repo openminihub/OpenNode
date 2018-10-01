@@ -18,26 +18,26 @@
 // Please maintain this license information along with authorship
 // and copyright notices in any redistribution of this code
 // **********************************************************************************
-#ifndef NodeContact_h
-#define NodeContact_h
+#ifndef NodeDevice_h
+#define NodeDevice_h
 #include "OpenProtocol.h"
-#include "NodeType.h"
+#include "DeviceType.h"
 
 typedef enum {
   k1Minute = 60, // In seconds
   k15Minutes = 900,
   k1Hour = 3600,
   k1Day = 86400,
-} ContactReportInterval_t;
+} DeviceReportInterval_t;
 
 #define kReportingIntervalNone (0)
 
 typedef bool (*NodeValue)(unsigned char id); 
 
-class NodeContact
+class NodeDevice
 {
 public:
-  NodeContact(unsigned char contactId, ContactData_t contactData, NodeValue valueFunc = NULL, unsigned long reportingInterval = kReportingIntervalNone);
+  NodeDevice(unsigned char deviceId, DeviceData_t deviceData, NodeValue valueFunc = NULL, unsigned long reportingInterval = kReportingIntervalNone);
 
   bool refreshValue();
   bool sendReport(unsigned char destination=0, bool useDestinationValue=false, bool doRefresh = true);
@@ -50,13 +50,13 @@ public:
 
   unsigned char id() { return mId; };
   void setId(unsigned char id) { mId = id; }
-  ContactData_t data() { return mData; };
-  void setType(ContactData_t data) { mData = data; }
+  DeviceData_t data() { return mData; };
+  void setType(DeviceData_t data) { mData = data; }
   void setSigned(bool status) { mSignedMsg = status; }
   
 private:
   unsigned char mId;
-  ContactData_t mData;
+  DeviceData_t mData;
   unsigned long mReportingInterval;
   unsigned long mNextReport;
   NodeValue mValueFunc;
@@ -64,4 +64,4 @@ private:
   bool mSignedMsg;
 };
 
-#endif // NodeContact_h
+#endif // NodeDevice_h

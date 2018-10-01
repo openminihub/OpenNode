@@ -4,8 +4,8 @@
 // Copyright Martins Ierags (2017), martins.ierags@gmail.com
 // http://openminihub.com/
 // **********************************************************************************
-#ifndef OpenType_h
-#define OpenType_h 
+#ifndef DeviceType_h
+#define DeviceType_h 
 
 /// @brief Type of sensor (used when presenting sensors)
 typedef enum {
@@ -50,7 +50,7 @@ typedef enum {
   S_GAS           = 37, //!< Gas meter, V_FLOW, V_VOLUME
   S_GPS           = 38, //!< GPS Sensor, V_POSITION
   S_WATER_QUALITY = 39  //!< V_TEMP, V_PH, V_ORP, V_EC, V_STATUS 
-} ContactType_t;
+} DeviceType_t;
 
 
 /// @brief Type of sensor data (for set/req/ack messages)
@@ -115,7 +115,7 @@ typedef enum {
   V_VAR           = 54, //!< S_POWER, Reactive power: volt-ampere reactive (var)
   V_VA            = 55, //!< S_POWER, Apparent power: volt-ampere (VA)
   V_POWER_FACTOR  = 56, //!< S_POWER, Ratio of real power to apparent power: floating point value in the range [-1,..,1]
-} ContactData_t;
+} DeviceData_t;
 
 /// @brief Type of internal messages (for internal messages)
 typedef enum {
@@ -149,7 +149,7 @@ typedef enum {
   I_REGISTRATION_RESPONSE = 27, //!< Register response from GW
   I_DEBUG         = 28,  //!< Debug message
   I_HAS_NEW_MESSAGES  = 29   //!< Does the node has new messages
-} ContactInternal_t;
+} DeviceInternal_t;
 
 
-#endif //OpenType_h
+#endif //DeviceType_h

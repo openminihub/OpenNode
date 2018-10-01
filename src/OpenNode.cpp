@@ -20,8 +20,8 @@
 // **********************************************************************************
 // #include <RFM69.h>
 #include "OpenNode.h"
-#include "NodeContact.h"
-#include "NodeType.h"
+#include "NodeDevice.h"
+#include "DeviceType.h"
 #include <RFM69registers.h>
 
 #define PRINTF_BUF_LEN  (40)
@@ -57,7 +57,7 @@ OpenNode::OpenNode(RFM69 *radio, unsigned char button, unsigned char gateway)
   gOpenNode = this;
   mRadio = radio;
   mGateway = gateway;
-  mNumContacts = 0;
+  mNumDevices = 0;
   mIsIncludeMode = false;
   mWaitForUpdate = false;
   mButton = button;
@@ -73,10 +73,10 @@ OpenNode::OpenNode(RFM69 *radio, unsigned char button, unsigned char gateway)
   pinMode(mButton, INPUT);
 }
 
-bool OpenNode::addContact(NodeContact *contact)
+bool OpenNode::addDevice(NodeDevice *device)
 {
-  if (mNumContacts <= CONFIG_MAX_CONTACTS) {
-    mContacts[mNumContacts++] = contact;
+  if (mNumDevices <= CONFIG_MAX_MESSAGES) {
+    mDevices[mNumDevices++] = device;
   }
 }
 
@@ -97,18 +97,18 @@ unsigned long OpenNode::run()
     // }
   // }
   unsigned long sleepInterval = 0xffffffff;
-  for (unsigned char i=0; i<mNumContacts; i++) {
-    if (mContacts[i]->isEnqueued()) {
-      mContacts[i]->sendReport();
+  for (unsigned char i=0; i<mNumDevices; i++) {
+    if (mDevices[i]->isEnqueued()) {
+      mDevices[i]->sendReport();
     } else {
-      unsigned long interval = mContacts[i]->nextTickInterval();
+      unsigned long interval = mDevices[i]->nextTickInterval();
       if (interval > 0 && interval < sleepInterval) {
         sleepInterval = interval;
       }
     }
   }
-  for (unsigned char i=0; i<mNumContacts; i++) {
-    mContacts[i]->intervalTick(sleepInterval);
+  for (unsigned char i=0; i<mNumDevices; i++) {
+    mDevices[i]->intervalTick(sleepInterval);
   }
   return sleepInterval;
 }
@@ -314,24 +314,24 @@ bool OpenNode::sendHello(const char *name, const char *version)
   return success;
 }
 
-bool OpenNode::sendInternalMessage(ContactInternal_t contactInternal, const char *message)
+bool OpenNode::sendInternalMessage(DeviceInternal_t deviceInternal, const char *message)
 {
-  OpenProtocol::buildInternalPacket(contactInternal, message);
+  OpenProtocol::buildInternalPacket(deviceInternal, message);
   return this->send(mGateway, false);
 }
 
-bool OpenNode::sendAllContactReport()
+bool OpenNode::sendAllDeviceReport()
 {
   this->setPayload("\0"); //no need to send data. We are sending only message type
-  for(unsigned char j=0; j<mNumContacts; j++) {
-    mContacts[j]->sendReport(0, false, false);
+  for(unsigned char j=0; j<mNumDevices; j++) {
+    mDevices[j]->sendReport(0, false, false);
   }
   return true;
 }
 
-bool OpenNode::sendPayload(unsigned char contactId, ContactData_t contactData, bool signedMsg)
+bool OpenNode::sendPayload(unsigned char deviceId, DeviceData_t deviceData, bool signedMsg)
 {
-  OpenProtocol::buildValuePacket(contactId, contactData);
+  OpenProtocol::buildValuePacket(deviceId, deviceData);
   return this->send(mGateway, signedMsg);
 }
 
@@ -370,9 +370,9 @@ void OpenNode::signPayload(const char* input)
   OpenProtocol::signPayload(input);
 }
 
-void OpenNode::presentContact(unsigned char contactId, ContactType_t contactType)
+void OpenNode::presentDevice(unsigned char deviceId, DeviceType_t deviceType)
 {
-  OpenProtocol::buildPresentPacket(contactId, contactType);
+  OpenProtocol::buildPresentPacket(deviceId, deviceType);
   bool success = this->send(mGateway, false);
 }
 
@@ -399,7 +399,7 @@ PayloadData_t OpenNode::dumpPayload(mPayload *msg)
     // Serial.println(this->getRadio()->RSSI);
 
     unsigned long validTime;
-    if (payload[kContactId] == 0xff && payload[kPacketType] == C_INTERNAL && payload[kPacketSubType] == I_NONCE_REQUEST) {
+    if (payload[kDeviceId] == 0xff && payload[kPacketType] == C_INTERNAL && payload[kPacketSubType] == I_NONCE_REQUEST) {
       // Serial.println("<-SIGN [1]: GOT NONCE REQUEST");
       validTime = millis();
       // Serial.print("->SIGN [2]: SIGN="); Serial.println(validTime);
@@ -410,7 +410,7 @@ PayloadData_t OpenNode::dumpPayload(mPayload *msg)
       return P_NONCE_REQUEST;
     }
 // #ifdef IS_GATEWAY
-    if (mIsIncludeMode && payload[kContactId] == 0xff && payload[kPacketType] == C_INTERNAL && payload[kPacketSubType] == I_ID_REQUEST) {
+    if (mIsIncludeMode && payload[kDeviceId] == 0xff && payload[kPacketType] == C_INTERNAL && payload[kPacketSubType] == I_ID_REQUEST) {
       Serial.println("Sending network data");
       OpenProtocol::buildIdPacket(this);
       this->getRadio()->setPowerLevel(0);
@@ -426,7 +426,7 @@ PayloadData_t OpenNode::dumpPayload(mPayload *msg)
     }
 // #endif
     msg->senderNode = src_node;
-    msg->contactId = payload[kContactId];
+    msg->deviceId = payload[kDeviceId];
     msg->messageType = payload[kPacketType];
     // msg->isAck = ack;
     msg->valueType = payload[kPacketSubType];
@@ -437,7 +437,7 @@ PayloadData_t OpenNode::dumpPayload(mPayload *msg)
     if (payload[kPacketSubType] == I_NONCE_RESPONSE) {
       // Serial.print("["); Serial.print((unsigned char)payload_size);  Serial.print("]");
       // Serial.print((unsigned char)msg->senderNode);  Serial.print(";");
-      // Serial.print((unsigned char)msg->contactId);   Serial.print(";");
+      // Serial.print((unsigned char)msg->deviceId);   Serial.print(";");
       // Serial.print((unsigned char)msg->messageType); Serial.print(";");
       // Serial.print((unsigned char)msg->isAck);       Serial.print(";");
       // Serial.print((unsigned char)msg->valueType);   Serial.print(";");
@@ -535,9 +535,9 @@ PayloadData_t OpenNode::waitForMessage(mPayload *msg)
   */
 }
 
-// bool OpenNode::sendContactReport(unsigned char contactId, ContactData_t contactData, unsigned char destination)
+// bool OpenNode::sendDeviceReport(unsigned char deviceId, DeviceData_t deviceData, unsigned char destination)
 // {
-  // OpenProtocol::buildValuePacket(contactId, contactData);
+  // OpenProtocol::buildValuePacket(deviceId, deviceData);
 //   bool success = this->getRadio()->sendWithRetry(destination, (const void*) OpenProtocol::packetData(), OpenProtocol::packetLength());
 //   this->getRadio()->sleep();
 //   return success;

@@ -20,7 +20,7 @@
 // **********************************************************************************
 #include "OpenProtocol.h"
 #include "OpenNode.h"
-#include "NodeContact.h"
+#include "NodeDevice.h"
 #include <Arduino.h>
 
 static unsigned char buf[MAX_PAYLOAD_LEN];
@@ -67,11 +67,11 @@ void OpenProtocol::signPayload(const char* nonce)
   OpenProtocol::setPayloadSize(mPacketLength-kPacketPayload+4); //current total size - start point + nonce size
 }
 
-void OpenProtocol::buildInternalPacket(ContactInternal_t contactInternal, const char *message)
+void OpenProtocol::buildInternalPacket(DeviceInternal_t deviceInternal, const char *message)
 {
-  OpenProtocol::mPacketBuffer[kContactId] = 0xff; //internal contact
+  OpenProtocol::mPacketBuffer[kDeviceId] = 0xff; //internal device
   OpenProtocol::mPacketBuffer[kPacketType] = C_INTERNAL;
-  OpenProtocol::mPacketBuffer[kPacketSubType] = contactInternal;
+  OpenProtocol::mPacketBuffer[kPacketSubType] = deviceInternal;
   if (message) {
     OpenProtocol::setPayloadValue(message);
   }
@@ -79,14 +79,14 @@ void OpenProtocol::buildInternalPacket(ContactInternal_t contactInternal, const 
 
 void OpenProtocol::buildNonceRequestPacket()
 {
-  OpenProtocol::mNonceBuffer[kContactId] = 0xff; //internal contact
+  OpenProtocol::mNonceBuffer[kDeviceId] = 0xff; //internal device
   OpenProtocol::mNonceBuffer[kPacketType] = C_INTERNAL;
   OpenProtocol::mNonceBuffer[kPacketSubType] = I_NONCE_REQUEST;
 }
 
 void OpenProtocol::buildNoncePacket(unsigned long *nonce)
 {
-  OpenProtocol::mNonceBuffer[kContactId] = 0xff; //internal contact
+  OpenProtocol::mNonceBuffer[kDeviceId] = 0xff; //internal device
   OpenProtocol::mNonceBuffer[kPacketType] = C_INTERNAL;
   OpenProtocol::mNonceBuffer[kPacketSubType] = I_NONCE_RESPONSE;
   OpenProtocol::mNonceBuffer[kPacketPayload] = *nonce & 0xff;
@@ -103,41 +103,41 @@ void OpenProtocol::buildNoncePacket(unsigned long *nonce)
   // Serial.println((unsigned char)OpenProtocol::mNonceBuffer[kPacketPayload+3]);
 }
 
-void OpenProtocol::buildPresentPacket(unsigned char contactId, ContactType_t contactType)
+void OpenProtocol::buildPresentPacket(unsigned char deviceId, DeviceType_t deviceType)
 {
-  OpenProtocol::mPacketBuffer[kContactId] = contactId;
+  OpenProtocol::mPacketBuffer[kDeviceId] = deviceId;
   OpenProtocol::mPacketBuffer[kPacketType] = C_PRESENTATION;
-  OpenProtocol::mPacketBuffer[kPacketSubType] = contactType;
+  OpenProtocol::mPacketBuffer[kPacketSubType] = deviceType;
   OpenProtocol::mPacketLength = kPacketPayload;
 }
 
-void OpenProtocol::buildValuePacket(unsigned char contactId, ContactData_t contactData)
+void OpenProtocol::buildValuePacket(unsigned char deviceId, DeviceData_t deviceData)
 {
-  OpenProtocol::mPacketBuffer[kContactId] = contactId;
+  OpenProtocol::mPacketBuffer[kDeviceId] = deviceId;
   OpenProtocol::mPacketBuffer[kPacketType] = C_SET;
-  OpenProtocol::mPacketBuffer[kPacketSubType] = contactData;
+  OpenProtocol::mPacketBuffer[kPacketSubType] = deviceData;
   // OpenProtocol::mPacketLength = kPacketPayload;
 }
 
 void OpenProtocol::buildPingPacket()
 {
-  OpenProtocol::mPacketBuffer[kContactId] = 0xff; //internal contact
+  OpenProtocol::mPacketBuffer[kDeviceId] = 0xff; //internal device
   OpenProtocol::mPacketBuffer[kPacketType] = C_INTERNAL;
   OpenProtocol::mPacketBuffer[kPacketSubType] = I_PING;
   OpenProtocol::mPacketLength = kPacketPayload;
 }
 
-void OpenProtocol::buildContactValuePacket(NodeContact *contact)
+void OpenProtocol::buildDeviceValuePacket(NodeDevice *device)
 {
-  OpenProtocol::mPacketBuffer[kContactId] = contact->id();
+  OpenProtocol::mPacketBuffer[kDeviceId] = device->id();
   OpenProtocol::mPacketBuffer[kPacketType] = C_SET;
-  OpenProtocol::mPacketBuffer[kPacketSubType] = contact->data();
+  OpenProtocol::mPacketBuffer[kPacketSubType] = device->data();
 }
 
 // #ifdef IS_GATEWAY
 void OpenProtocol::buildIdPacket(OpenNode *node)
 {
-  OpenProtocol::mPacketBuffer[kContactId] = 0xff; //internal contact
+  OpenProtocol::mPacketBuffer[kDeviceId] = 0xff; //internal device
   OpenProtocol::mPacketBuffer[kPacketType] = C_INTERNAL;
   OpenProtocol::mPacketBuffer[kPacketSubType] = I_ID_RESPONSE;
   OpenProtocol::mPacketBuffer[kPacketPayload] = node->getNetworkID();
@@ -171,8 +171,8 @@ unsigned char OpenProtocol::buildMessagePacket(char *inputString)
       case 0: // targetId (destination)
         targetId = atoi(str);
         break;
-      case 1: // contactId
-        OpenProtocol::mPacketBuffer[kContactId] = atoi(str);
+      case 1: // deviceId
+        OpenProtocol::mPacketBuffer[kDeviceId] = atoi(str);
         break;
       case 2: // Message type
         OpenProtocol::mPacketBuffer[kPacketType] = atoi(str);

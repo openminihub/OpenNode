@@ -19,14 +19,14 @@
 // and copyright notices in any redistribution of this code
 // **********************************************************************************
 #include <RFM69.h>
-#include "NodeContact.h"
+#include "NodeDevice.h"
 #include "OpenNode.h"
 #include "OpenProtocol.h"
 
-NodeContact::NodeContact(unsigned char contactId, ContactData_t contactData, NodeValue valueFunc, unsigned long reportingInterval)
+NodeDevice::NodeDevice(unsigned char deviceId, DeviceData_t deviceData, NodeValue valueFunc, unsigned long reportingInterval)
 {
-  mId = contactId;
-  mData = contactData;
+  mId = deviceId;
+  mData = deviceData;
   mIsEnqueued = false;
   mReportingInterval = reportingInterval;
   mValueFunc = valueFunc;
@@ -35,11 +35,11 @@ NodeContact::NodeContact(unsigned char contactId, ContactData_t contactData, Nod
   
   OpenNode *node = OpenNode::node();
   if (node) {
-    node->addContact(this);
+    node->addDevice(this);
   }
 }
 
-bool NodeContact::sendReport(unsigned char destination, bool useDestinationValue, bool doRefresh)
+bool NodeDevice::sendReport(unsigned char destination, bool useDestinationValue, bool doRefresh)
 {
   OpenNode *node = OpenNode::node();
   if (node) {
@@ -47,19 +47,19 @@ bool NodeContact::sendReport(unsigned char destination, bool useDestinationValue
       destination = node->getGateway();
     if (doRefresh) {
       if (this->refreshValue()) {
-        OpenProtocol::buildContactValuePacket(this);
+        OpenProtocol::buildDeviceValuePacket(this);
         return node->send(destination, this->isSignedMsg());
       }
       else {
         // Serial.println("I'm broking node 1");
-        // OpenProtocol::buildContactValuePacket(this);
+        // OpenProtocol::buildDeviceValuePacket(this);
         // return node->send(destination, this->isSignedMsg());
         node->getRadio()->sleep();
         return false;
       }
     }
     else {
-      OpenProtocol::buildContactValuePacket(this);
+      OpenProtocol::buildDeviceValuePacket(this);
       return node->send(destination, this->isSignedMsg());
     }
   } else {
@@ -67,7 +67,7 @@ bool NodeContact::sendReport(unsigned char destination, bool useDestinationValue
   }
 }
 
-bool NodeContact::refreshValue()
+bool NodeDevice::refreshValue()
 {
   bool success = false;
   if (mValueFunc) {
@@ -76,7 +76,7 @@ bool NodeContact::refreshValue()
   return success;
 }
 
-void NodeContact::intervalTick(unsigned long time)
+void NodeDevice::intervalTick(unsigned long time)
 {
 
   if (mReportingInterval > 0) {

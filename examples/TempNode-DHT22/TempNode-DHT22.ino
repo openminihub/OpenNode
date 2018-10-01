@@ -1,7 +1,7 @@
 // **********************************************************************************
 // OpenNode DHT22 example for OpenMiniHub IoT, Node and Contact types from mysensors.org
 // **********************************************************************************
-// Copyright Martins Ierags (2017), martins.ierags@gmail.com
+// Copyright Martins Ierags (2018), martins.ierags@gmail.com
 // http://openminihub.com/
 // **********************************************************************************
 #include <DHT.h>  
@@ -9,7 +9,7 @@
 #include <SPIFlash.h>       //get it here: https://www.github.com/lowpowerlab/spiflash
 #include <RFM69_OTA.h>
 
-#define CONFIG_MAX_CONTACTS (3)
+#define CONFIG_MAX_MESSAGES (3)
 #include <OpenNode.h>
 
 #define SW_NAME "DHT22-Light"
@@ -22,7 +22,7 @@
 #define LIGHT_SENSOR_ANALOG_PIN     A1
 #define LIGHT_SENSOR_POWER_PIN      A2
 
-// Contact value getters
+// Device value getters
 bool temperatureValue(unsigned char id);
 bool humidityValue(unsigned char id);
 
@@ -35,8 +35,8 @@ SPIFlash flash(FLASH_SS, 0xEF30); //EF30 for windbond 4mbit flash
 
 RFM69 radio;
 OpenNode node(&radio);
-NodeContact cTemperature(1, V_TEMP, temperatureValue, k1Minute);
-NodeContact cHumidity(2, V_HUM, humidityValue, k1Minute);
+NodeDevice dTemperature(1, V_TEMP, temperatureValue, k1Minute);
+NodeDevice dHumidity(2, V_HUM, humidityValue, k1Minute);
 
 void readDHT()
 {
@@ -104,8 +104,8 @@ void setup()
 
 //  node.sendHello(SW_NAME, SW_VERSION);
 
-  node.presentContact(1, S_TEMP);
-  node.presentContact(2, S_HUM);
+  node.presentDevice(1, S_TEMP);
+  node.presentDevice(2, S_HUM);
 
   Serial.println( readVcc(), DEC );
 }
@@ -122,7 +122,7 @@ void loop()
   }
 
   node.setPayload(lastTemp);
-  cTemperature.sendReport(99, true, false);
+  dTemperature.sendReport(99, true, false);
 
   sleepSeconds(sleepTime);
 }

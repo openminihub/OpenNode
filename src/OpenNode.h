@@ -22,15 +22,15 @@
 #define OpenNode_h
 
 
-#ifndef CONFIG_MAX_CONTACTS
-   #define CONFIG_MAX_CONTACTS (255)
+#ifndef CONFIG_MAX_MESSAGES
+   #define CONFIG_MAX_MESSAGES (255)
 #endif
 
 #include <RFM69.h>
 #include <avr/eeprom.h>
 #include <avr/wdt.h>
 #include "OpenProtocol.h"
-#include "NodeContact.h"
+#include "NodeDevice.h"
 #include "NodeConfig.h"
 #include "NodeEEPROM.h"
 
@@ -40,12 +40,12 @@
 #define includeTimeOut 30
 
 class RFM69;
-class NodeContact;
+class NodeDevice;
 class OpenProtocol;
 
 struct mPayload {
   unsigned char senderNode=0;
-  unsigned char contactId=0;
+  unsigned char deviceId=0;
   unsigned char messageType=0;
   bool isAck=0;
   unsigned char valueType=0;
@@ -100,10 +100,10 @@ public:
   bool send(unsigned char destination, bool signedMsg);
   bool sendPing();
   bool sendHello(const char *name, const char *version);
-  bool sendInternalMessage(ContactInternal_t contactInternal, const char *message = "");
-  bool sendAllContactReport();
+  bool sendInternalMessage(DeviceInternal_t deviceInternal, const char *message = "");
+  bool sendAllDeviceReport();
   bool sendMessage(char *input, bool signedMsg = true);
-  bool sendPayload(unsigned char contactId, ContactData_t contactData, bool signedMsg = true);
+  bool sendPayload(unsigned char deviceId, DeviceData_t deviceData, bool signedMsg = true);
   void setPayload(const char* input);
   void setPayload(float input, unsigned char decimals=2);
   void setPayload(bool input);
@@ -123,15 +123,15 @@ public:
 
   RFM69 *getRadio() { return mRadio; };
   unsigned char getGateway() { return mGateway; };
-  bool addContact(NodeContact *contact);
-  void presentContact(unsigned char contactId, ContactType_t contactType);
-  NodeContact* getContact(unsigned int index) { return mContacts[index]; };
-  unsigned int numContacts() { return mNumContacts; };
+  bool addDevice(NodeDevice *device);
+  void presentDevice(unsigned char deviceId, DeviceType_t deviceType);
+  NodeDevice* getDevice(unsigned int index) { return mDevices[index]; };
+  unsigned int numDevices() { return mNumDevices; };
   unsigned char getNodeID() { return mNodeID; };
   unsigned char getNetworkID() { return mNetworkID; };
   unsigned char getFrequency() { return mFrequency; };
   char *getEncryptKey() { return mEncryptKey; };
-  // bool sendContactReport(unsigned char contactId, ContactData_t contactData, unsigned char destination = mGateway);
+  // bool sendDeviceReport(unsigned char deviceId, DeviceData_t deviceData, unsigned char destination = mGateway);
   bool hasUpdate(unsigned char node);
   void enableUpdate(unsigned char node);
   void disableUpdate(unsigned char node);
@@ -144,8 +144,8 @@ private:
   bool mIsIncludeMode;
   bool mWaitForUpdate;
   unsigned long mIncludeTime;
-  unsigned int mNumContacts;
-  NodeContact *mContacts[CONFIG_MAX_CONTACTS];
+  unsigned int mNumDevices;
+  NodeDevice *mDevices[CONFIG_MAX_MESSAGES];
   unsigned char mSign[32]; // = {255};
   char mEncryptKey[16];
   unsigned char mNodeID;
