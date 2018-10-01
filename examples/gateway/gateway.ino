@@ -30,6 +30,7 @@ void setup() {
   Serial.begin(115200);
 
   node.initRadio(0);  //NodeID=0 (gateway)
+  radio.setHighPower(); //must include this only for RFM69HW/HCW!
 
   bprintf("\n");
   bprintf("0;255;3;0;14;%s\n", SW_NAME);
