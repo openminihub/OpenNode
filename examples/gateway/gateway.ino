@@ -7,7 +7,7 @@
 // **********************************************************************************
 #include <RFM69_OTA.h>      //get it here: https://github.com/lowpowerlab/RFM69
 
-#define CONFIG_MAX_CONTACTS (0)
+#define CONFIG_MAX_MESSAGES (0)
 #define IS_GATEWAY (TRUE)
 #include <OpenNode.h>
 
@@ -30,7 +30,7 @@ void setup() {
   Serial.begin(115200);
 
   node.initRadio(0);  //NodeID=0 (gateway)
-  radio.setHighPower(); //must include this only for RFM69HW/HCW!
+//  radio.setHighPower(); //must include this only for RFM69HW/HCW!
 
   bprintf("\n");
   bprintf("0;255;3;0;14;%s\n", SW_NAME);
@@ -112,7 +112,7 @@ void processSerial()
 void outputSerial(mPayload *msg)
 {
     Serial.print((unsigned char)msg->senderNode);  Serial.print(";");
-    Serial.print((unsigned char)msg->contactId);   Serial.print(";");
+    Serial.print((unsigned char)msg->deviceId);   Serial.print(";");
     Serial.print((unsigned char)msg->messageType); Serial.print(";");
     Serial.print((unsigned char)msg->isAck);       Serial.print(";");
     Serial.print((unsigned char)msg->valueType);   Serial.print(";");
