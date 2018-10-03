@@ -11,11 +11,11 @@
 #define SW_NAME "RelayNode"
 #define SW_VERSION "1.0"
 
-#define Relay1_pin 6
+#define RELAY1_PIN 6
 #define RELAY1_ID 1
 
-#define CLOSED 1
-#define OPEN   0
+#define CLOSED 0
+#define OPEN   1
 
 SPIFlash flash(FLASH_SS, 0xEF30); //EF30 for windbond 4mbit flash
 
@@ -50,13 +50,13 @@ void setup()
 
   node.initRadio(); //(6, false, true);  //(nodeid, readFromEEPROM, updateConfig)
   node.sendHello(SW_NAME, SW_VERSION);
-  node.presentDevice(2, S_BINARY);
+  node.presentDevice(RELAY1_ID, S_BINARY);
 
   powerRelay.setSigned(false); //use this line if you do not want to sign the message
   powerRelay.sendReport();
 
-  pinMode( Relay1_pin, OUTPUT );
-  digitalWrite( Relay1_pin, relayStatus);  // Initialize relay status
+  pinMode( RELAY1_PIN, OUTPUT );
+  digitalWrite( RELAY1_PIN, relayStatus);  // Initialize relay status
   
   Serial.println("Init done");
 }
@@ -65,7 +65,7 @@ void processRelay(String msg_value)
 {
   if ((msg_value == "0" && relayStatus == OPEN) ||
       (msg_value == "1" && relayStatus == CLOSED)) {
-    digitalWrite( Relay1_pin, relayStatus);
+    digitalWrite( RELAY1_PIN, relayStatus);
     relayStatus = !relayStatus;
     powerRelay.sendReport();
     blink(200);
