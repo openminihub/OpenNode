@@ -1,3 +1,4 @@
+
 /*
  * Copyright (c) 2018 Martins Ierags (github.com/openminihub)
  */
@@ -24,10 +25,10 @@ OpenNode node(&radio);
 
 //define Device value getters
 bool relayPosition(unsigned char id);
+bool relayStatus=CLOSED;
 
 //define the relay device
 NodeDevice powerRelay(RELAY1_ID, V_STATUS, relayPosition);
-bool relayStatus=CLOSED;
 
 //received message
 struct mPayload msg;
@@ -63,13 +64,9 @@ void setup()
 
 void processRelay(String msg_value)
 {
-  if ((msg_value == "0" && relayStatus == OPEN) ||
-      (msg_value == "1" && relayStatus == CLOSED)) {
-    digitalWrite( RELAY1_PIN, relayStatus);
-    relayStatus = !relayStatus;
-    powerRelay.sendReport();
-    blink(200);
-  }
+  relayStatus = msg_value == "1" ? true : false;
+  digitalWrite( RELAY1_PIN, (relayStatus) ? HIGH : LOW);
+  powerRelay.sendReport();
 }
 
 void processReceivedData()

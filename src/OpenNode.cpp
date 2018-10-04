@@ -292,8 +292,10 @@ bool OpenNode::send(unsigned char destination, bool signedMsg)
     }
     // interrupts();
   }
-  this->getRadio()->sleep();
-  blink(100);
+  if (mNodeID != mGateway) {
+    this->getRadio()->sleep();
+    // blink(100);
+  }
   return success;
 }
 
