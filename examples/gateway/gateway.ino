@@ -12,6 +12,9 @@
 #include <OpenNode.h>
 
 #define SERIAL_BAUD   115200
+#define TIMEOUT     3000
+#define ACK_TIME    50    // # of ms to wait for an ack
+#define DEBUG_MODE false  //set 'true' to see verbose output from programming sequence
 
 #define SW_NAME "OpenMiniHub Gateway"
 #define SW_VERSION "2.0"
