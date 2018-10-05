@@ -12,8 +12,8 @@
 #define SW_NAME "RelayNode"
 #define SW_VERSION "1.0"
 
-#define RELAY1_PIN 6
-#define RELAY1_ID 1
+#define RELAY_PIN 6
+#define RELAY_DEVICE_ID 1
 
 #define CLOSED 0
 #define OPEN   1
@@ -28,7 +28,7 @@ bool relayPosition(unsigned char id);
 bool relayStatus=CLOSED;
 
 //define the relay device
-NodeDevice powerRelay(RELAY1_ID, V_STATUS, relayPosition);
+NodeDevice powerRelay(RELAY_DEVICE_ID, V_STATUS, relayPosition);
 
 //received message
 struct mPayload msg;
@@ -51,13 +51,13 @@ void setup()
 
   node.initRadio(); //(6, false, true);  //(nodeid, readFromEEPROM, updateConfig)
   node.sendHello(SW_NAME, SW_VERSION);
-  node.presentDevice(RELAY1_ID, S_BINARY);
+  node.presentDevice(RELAY_DEVICE_ID, S_BINARY);
 
   powerRelay.setSigned(false); //use this line if you do not want to sign the message
   powerRelay.sendReport();
 
-  pinMode( RELAY1_PIN, OUTPUT );
-  digitalWrite( RELAY1_PIN, relayStatus);  // Initialize relay status
+  pinMode(RELAY_PIN, OUTPUT);
+  digitalWrite(RELAY_PIN, relayStatus);  // Initialize relay status
   
   Serial.println("Init done");
 }
@@ -65,7 +65,7 @@ void setup()
 void processRelay(String msg_value)
 {
   relayStatus = msg_value == "1" ? true : false;
-  digitalWrite( RELAY1_PIN, (relayStatus) ? HIGH : LOW);
+  digitalWrite( RELAY_PIN, (relayStatus) ? HIGH : LOW);
   powerRelay.sendReport();
 }
 
@@ -84,12 +84,10 @@ void loop()
       if (radio.ACK_REQUESTED) {
         radio.sendACK();
       }
-
       if (pld == P_VALID) {
         blink(10);
         processReceivedData();
       }
-
     }
     node.run();  
 }

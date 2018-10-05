@@ -16,10 +16,6 @@
 #define SW_NAME "OpenMiniHub Gateway"
 #define SW_VERSION "2.0"
 
-#define TIMEOUT     3000
-#define ACK_TIME    50    // # of ms to wait for an ack
-#define DEBUG_MODE false  //set 'true' to see verbose output from programming sequence
-
 
 RFM69 radio;
 OpenNode node(&radio);
@@ -89,9 +85,7 @@ void processSerial()
       char encryptKey[16];
       for (uint8_t i = 0; i < 16; i++) {
         encryptKey[i]=inData[2+i];
-//        Serial.print((char)encryptKey[i]);
       }
-//      Serial.println();
       node.updateKey(encryptKey);
       node.saveRadioConfig();
       radio.encrypt(encryptKey);
@@ -146,6 +140,5 @@ void loop()
       outputSerial(&msg);
     }
   }
-  
 //  node.run();
 }
