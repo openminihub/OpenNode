@@ -115,32 +115,27 @@ unsigned long OpenNode::run()
 
 void OpenNode::initRadio(unsigned char nodeID, bool readFromEEPROM, bool updateConfig)
 {
-  unsigned char isRFM69 = readConfig(EEPROM_IS_RFM69HW);
-  if ((isRFM69 == RF_OCP_OFF || isRFM69 == RF_OCP_ON) && readFromEEPROM) {
-    Serial.println("Config exists. Reading...");
+  unsigned char mIsRFM69HW = readConfig(EEPROM_IS_RFM69HW);
+  if ((mIsRFM69HW == RF_OCP_OFF || mIsRFM69HW == RF_OCP_ON) && readFromEEPROM) {
+    Serial.println("Reading NODE Config");
     mNetworkID = readConfig(EEPROM_NETWORK_ID);
     mFrequency = readConfig(EEPROM_FREQUENCY);
     mNodeID = readConfig(EEPROM_NODE_ID);
     readConfigBlock(&mEncryptKey, EEPROM_ENCRYPTKEY, 16);
-
-    this->getRadio()->initialize(mFrequency, mNodeID, mNetworkID);
-    this->getRadio()->encrypt(mEncryptKey);
-
-    // isRFM69='X';
-    // writeConfig(EEPROM_IS_RFM69HW, isRFM69);
   } else {
-    Serial.println("Default Config.");
-    this->getRadio()->initialize(FREQUENCY, nodeID, NETWORKID);
-    this->getRadio()->encrypt(ENCRYPTKEY);
+    Serial.println("Custom NODE Config");
+    mNetworkID = NETWORKID;
+    mFrequency = FREQUENCY;
+    mNodeID = nodeID;
+    updateKey(ENCRYPTKEY);
+  } 
+  this->getRadio()->initialize(mFrequency, mNodeID, mNetworkID);
+  this->getRadio()->encrypt(mEncryptKey);
+  if (mIsRFM69HW == RF_OCP_OFF) this->getRadio()->setHighPower();
 
-    if (updateConfig) {
-      Serial.println("Saving...");
-      mNodeID = nodeID;
-      mFrequency = FREQUENCY;
-      mNetworkID = NETWORKID;
-      updateKey(ENCRYPTKEY);
+  if (updateConfig) {
+      Serial.println("Saving NODE Config");
       saveRadioConfig();
-    }
   }
   this->getRadio()->sleep();
 }
