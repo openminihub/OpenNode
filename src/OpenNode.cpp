@@ -244,9 +244,10 @@ unsigned char OpenNode::newNodeID()
 
 bool OpenNode::send(unsigned char destination, bool signedMsg)
 {
+  unsigned char retries=3;
   if (signedMsg) { //Request sing nonce
     bool waitMsg = true;
-    unsigned char retries=3;
+    // unsigned char retries=3;
     for (unsigned char attempt = 0; attempt < retries; attempt++) {
       // Serial.print("->SIGNED MSG [1]: SENDIG NONCE REQUEST ["); Serial.print(attempt+1); Serial.println("]");
       OpenProtocol::buildNonceRequestPacket();
@@ -275,7 +276,7 @@ bool OpenNode::send(unsigned char destination, bool signedMsg)
       return false;
     }
   }
-  bool success = this->getRadio()->sendWithRetry(destination, (const void*) OpenProtocol::packetData(), OpenProtocol::packetLength());
+  bool success = this->getRadio()->sendWithRetry(destination, (const void*) OpenProtocol::packetData(), OpenProtocol::packetLength(), signedMsg ? retries : retries+2);
   //Does ACK has some message?
   if (success) {
     // noInterrupts();  // ? prevent loss of data while copying

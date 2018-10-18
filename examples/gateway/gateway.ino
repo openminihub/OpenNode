@@ -102,7 +102,7 @@ void processSerial()
       Serial.println((unsigned char)updateNode);
       node.enableUpdate(updateNode);
     } else if (colonIndex>0) {
-      node.sendMessage(inData);
+      bool sendStatus = node.sendMessage(inData);
     }
   }
 }

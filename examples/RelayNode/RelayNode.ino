@@ -26,6 +26,7 @@ OpenNode node(&radio);
 //define Device value getters
 bool relayPosition(unsigned char id);
 bool relayStatus=CLOSED;
+bool relayStatusPrev=relayStatus;
 
 //define the relay device
 NodeDevice powerRelay(RELAY_DEVICE_ID, V_STATUS, relayPosition);
@@ -64,9 +65,12 @@ void setup()
 
 void processRelay(String msg_value)
 {
+  relayStatusPrev = relayStatus;
   relayStatus = msg_value == "1" ? true : false;
-  digitalWrite( RELAY_PIN, (relayStatus) ? HIGH : LOW);
-  powerRelay.sendReport();
+  if (powerRelay.sendReport())
+    digitalWrite( RELAY_PIN, (relayStatus) ? HIGH : LOW);
+  else
+    relayStatus = relayStatusPrev;
 }
 
 void processReceivedData()
