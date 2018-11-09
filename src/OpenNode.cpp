@@ -283,7 +283,7 @@ bool OpenNode::send(unsigned char destination, bool signedMsg)
     if (this->getRadio()->DATALEN) {
       if (this->getRadio()->DATA[0] == 'U') {
         mWaitForUpdate = true;
-        Serial.println("GOT: U");
+        // Serial.println("GOT: U");
       }
     }
     // interrupts();

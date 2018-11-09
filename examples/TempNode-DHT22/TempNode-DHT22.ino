@@ -22,6 +22,9 @@
 #define LIGHT_SENSOR_ANALOG_PIN     A1
 #define LIGHT_SENSOR_POWER_PIN      A2
 
+#define TEMP_DEVICE_ID 1
+#define HUM_DEVICE_ID  2
+
 // Device value getters
 bool temperatureValue(unsigned char id);
 bool humidityValue(unsigned char id);
@@ -31,12 +34,14 @@ float lastTemp;
 float lastHIC;
 float lastHum;
 
+long prevBatteryLevel = 0;
+
 SPIFlash flash(FLASH_SS, 0xEF30); //EF30 for windbond 4mbit flash
 
 RFM69 radio;
 OpenNode node(&radio);
-NodeDevice dTemperature(1, V_TEMP, temperatureValue, k1Minute);
-NodeDevice dHumidity(2, V_HUM, humidityValue, k1Minute);
+NodeDevice dTemperature(TEMP_DEVICE_ID, V_TEMP, temperatureValue, k1Minute);
+NodeDevice dHumidity(HUM_DEVICE_ID, V_HUM, humidityValue, k1Minute);
 
 void readDHT()
 {
@@ -44,8 +49,6 @@ void readDHT()
   pinMode(HUMIDITY_SENSOR_DIGITAL_PIN, INPUT);
   dht.begin();
   sleepSeconds(2);  // 0.5 Hz sampling rate (once every 2 seconds)
-//  LowPower.powerDown(SLEEP_500MS, ADC_OFF, BOD_OFF);
-//  LowPower.powerDown(SLEEP_500MS, ADC_OFF, BOD_OFF);
   float temp = dht.readTemperature();
   if (isnan(temp)) {
       Serial.println("Failed reading temperature from DHT");
@@ -99,15 +102,10 @@ void setup()
     Serial.println("SPI Flash Init FAIL!");  
 
   node.initRadio(); //NodeID=1, do not read config from EEPROM
-//  node.initRadio(5, false); //NodeID=1, do not read config from EEPROM
   node.sendHello(SW_NAME, SW_VERSION);
 
-//  node.sendHello(SW_NAME, SW_VERSION);
-
-  node.presentDevice(1, S_TEMP);
-  node.presentDevice(2, S_HUM);
-
-  Serial.println( readVcc(), DEC );
+  node.presentDevice(TEMP_DEVICE_ID, S_TEMP);
+  node.presentDevice(HUM_DEVICE_ID, S_HUM);
 }
 
 void loop()
@@ -118,11 +116,20 @@ void loop()
     Serial.println("Updating...");
     CheckForWirelessHEX(radio, flash);
     Serial.println("Update failed");
-    node.disableWaitForUpdate();
+//    node.disableWaitForUpdate();
   }
 
-  node.setPayload(lastTemp);
-  dTemperature.sendReport(99, true, false);
+//  node.setPayload(lastTemp);
+//  dTemperature.sendReport(99, true, false);
+
+  //check battery
+  long batteryLevel = 100 - (3329-readVcc());
+  if (prevBatteryLevel != batteryLevel)
+  {
+    char str_temp[4];
+    dtostrf(batteryLevel, 1, 0, str_temp);
+    if (node.sendInternalMessage(I_BATTERY_LEVEL, str_temp)) prevBatteryLevel = batteryLevel;
+  }
 
   sleepSeconds(sleepTime);
 }
