@@ -13,7 +13,7 @@
 #include <OpenNode.h>
 
 #define SW_NAME "DHT22-Light"
-#define SW_VERSION "1.3"
+#define SW_VERSION "1.4"
 
 #define HUMIDITY_SENSOR_DIGITAL_PIN 6
 #define HUMIDITY_SENSOR_POWER_PIN   5
@@ -129,6 +129,8 @@ void loop()
 
 void sleepSeconds(unsigned long sleepTime)
 {
+  radio.sleep();
+  flash.sleep();
   unsigned long cycleCount = sleepTime / 8;
   byte remainder = sleepTime % 10;
   for(unsigned int i=0; i<cycleCount; i++)

@@ -133,7 +133,7 @@ void OpenNode::initRadio(unsigned char nodeID, bool readFromEEPROM, bool updateC
   this->getRadio()->encrypt(mEncryptKey);
   if (mIsRFM69HW == RF_OCP_OFF) this->getRadio()->setHighPower();
 
-  if (updateConfig) {
+  if (updateConfig  && !readFromEEPROM) {
       Serial.println("Saving NODE Config");
       saveRadioConfig();
   }

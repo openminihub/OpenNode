@@ -47,7 +47,6 @@ void loop()
     }
     if (pld == P_VALID) {
       blink(10);
-      processReceivedData();
     }
   }
   node.run();  

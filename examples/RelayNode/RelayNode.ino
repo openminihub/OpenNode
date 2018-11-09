@@ -10,7 +10,7 @@
 #include <OpenNode.h>
 
 #define SW_NAME "RelayNode"
-#define SW_VERSION "1.0"
+#define SW_VERSION "1.1"
 
 #define RELAY_PIN 6
 #define RELAY_DEVICE_ID 1
