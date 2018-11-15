@@ -372,6 +372,13 @@ void OpenNode::presentDevice(unsigned char deviceId, DeviceType_t deviceType)
 {
   OpenProtocol::buildPresentPacket(deviceId, deviceType);
   bool success = this->send(mGateway, false);
+
+  for (unsigned char i=0; i<mNumDevices; i++) {
+    if (mDevices[i]->id() == deviceId) {
+      mDevices[i]->refreshValue();
+      mDevices[i]->sendReport(0, false, false);
+    }
+  }
 }
 
 // PayloadData_t OpenNode::dumpPayload(int src_node, int dst_node, int rssi, bool ack, unsigned char* payload, int payload_size, mPayload *msg)
