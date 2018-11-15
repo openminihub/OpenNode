@@ -50,7 +50,7 @@ typedef enum {
   S_GAS           = 37, //!< Gas meter, V_FLOW, V_VOLUME
   S_GPS           = 38, //!< GPS Sensor, V_POSITION
   S_WATER_QUALITY = 39, //!< V_TEMP, V_PH, V_ORP, V_EC, V_STATUS
-  S_GATE          = 40  //!< V_STATUS, V_LOCK_STATUS, V_TRIPPED, V_ARMED
+  S_GATE          = 40  //!< V_LOCK_STATUS, V_GATE_STATUS, V_TRIPPED, V_ARMED
 } DeviceType_t;
 
 
@@ -116,6 +116,8 @@ typedef enum {
   V_VAR           = 54, //!< S_POWER, Reactive power: volt-ampere reactive (var)
   V_VA            = 55, //!< S_POWER, Apparent power: volt-ampere (VA)
   V_POWER_FACTOR  = 56, //!< S_POWER, Ratio of real power to apparent power: floating point value in the range [-1,..,1]
+  V_GATE_STATUS   = 57, //!< S_GATE, Gate status ("OPENED", "CLOSED", "OPENING", "CLOSING", "PAUSE")
+  V_GATE_STATE    = 58  //!< S_GATE, Control Gate state ("OPEN", "CLOSE", "PAUSE")
 } DeviceData_t;
 
 /// @brief Type of internal messages (for internal messages)

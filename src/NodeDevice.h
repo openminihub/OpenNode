@@ -53,6 +53,7 @@ public:
   DeviceData_t data() { return mData; };
   void setType(DeviceData_t data) { mData = data; }
   void setSigned(bool status) { mSignedMsg = status; }
+  void setEnqueued() { mIsEnqueued = true; };
   
 private:
   unsigned char mId;
