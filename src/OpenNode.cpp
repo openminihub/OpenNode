@@ -96,15 +96,21 @@ unsigned long OpenNode::run()
     //   }
     // }
   // }
+  // for (unsigned char i=0; i<mNumDevices; i++) {
+  //   // if (mDevices[i]->isEnqueued()) {
+  //     // mDevices[i]->sendReport();
+  //   // } else {
+  //   {
+  //     unsigned long interval = mDevices[i]->nextTickInterval();
+  //     if (interval > 0 && interval < sleepInterval) {
+  //       sleepInterval = interval;
+  //     }
+  //   }
+  // }
   unsigned long sleepInterval = 0xffffffff;
   for (unsigned char i=0; i<mNumDevices; i++) {
-    if (mDevices[i]->isEnqueued()) {
-      mDevices[i]->sendReport();
-    } else {
-      unsigned long interval = mDevices[i]->nextTickInterval();
-      if (interval > 0 && interval < sleepInterval) {
-        sleepInterval = interval;
-      }
+    if (mDevices[i]->nextTickInterval() > 0 && mDevices[i]->nextTickInterval() < sleepInterval) {
+      sleepInterval = mDevices[i]->nextTickInterval();
     }
   }
   for (unsigned char i=0; i<mNumDevices; i++) {

@@ -81,15 +81,17 @@ void NodeDevice::intervalTick(unsigned long time)
 
   if (mReportingInterval > 0) {
     if (time >= mNextReport) {
-      mNextReport = 0;
+      // mNextReport = 0;
+      this->sendReport();
+      this->intervalReset();
+      if (mIsEnqueued) mIsEnqueued = false;
     } else {
       mNextReport -= time;
     }
-    
-    if (mNextReport == 0) {
-      this->sendReport();
-      this->intervalReset();
-    }
+    // if (mNextReport == 0) {
+    //   this->sendReport();
+    //   this->intervalReset();
+    // }
   } else if (mIsEnqueued) {
     mIsEnqueued = false;
     this->sendReport();
