@@ -13,7 +13,7 @@
 #include <OpenNode.h>
 
 #define SW_NAME "DHT22-Light"
-#define SW_VERSION "1.4"
+#define SW_VERSION "1.5"
 
 #define HUMIDITY_SENSOR_DIGITAL_PIN 6
 #define HUMIDITY_SENSOR_POWER_PIN   5
@@ -96,14 +96,17 @@ void setup()
   Serial.begin(115200);
   Serial.println("Serial init done");
 
-  if (flash.initialize())
+  if (flash.initialize()) {
     Serial.println("SPI Flash Init OK!");
-  else
+    flash.sleep();
+  } else
     Serial.println("SPI Flash Init FAIL!");  
 
   node.initRadio(); //NodeID=1, do not read config from EEPROM
+  
   node.sendHello(SW_NAME, SW_VERSION);
 
+  readDHT();
   node.presentDevice(TEMP_DEVICE_ID, S_TEMP);
   node.presentDevice(HUM_DEVICE_ID, S_HUM);
 }
@@ -130,14 +133,12 @@ void loop()
     dtostrf(batteryLevel, 1, 0, str_temp);
     if (node.sendInternalMessage(I_BATTERY_LEVEL, str_temp)) prevBatteryLevel = batteryLevel;
   }
-
   sleepSeconds(sleepTime);
 }
 
 void sleepSeconds(unsigned long sleepTime)
 {
   radio.sleep();
-  flash.sleep();
   unsigned long cycleCount = sleepTime / 8;
   byte remainder = sleepTime % 10;
   for(unsigned int i=0; i<cycleCount; i++)
