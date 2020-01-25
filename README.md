@@ -16,6 +16,8 @@ Communication between nodes are serialized using [MySensors.org Serial API v2.0]
 - message signing with time expiring (including retry)
 - 59 (61) bytes max message length (support AES hardware encryption)
 - works with RFM69 library by Felix Rusu without modifications inluding ATC & OTA
+- easy node including in existing network (by button pressing)
+- initially node can be EmptyNode included in network and then you can push firmware you want to use by OTA
 
 ## License
 - GPL 3.0, please see the [License](https://github.com/openminihub/OpenNode/blob/master/LICENSE) file
